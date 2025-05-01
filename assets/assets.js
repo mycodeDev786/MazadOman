@@ -11,6 +11,7 @@ import watches from "../assets/watches.png";
 import beauty from "../assets/beauty.png";
 import skin from "../assets/skin.png";
 import facility from "../assets/facility.png";
+import profile from "../assets/profile.png";
 export const assets = {
   logo,
   footerBg: "/images/footer.png",
@@ -27,4 +28,5 @@ export const assets = {
   beauty,
   skin,
   facility,
+  profile,
 };

@@ -5,11 +5,56 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
 import { assets } from "@/assets/assets";
+import Loading from "../components/LoadingSpinner";
+import { useDispatch } from "react-redux";
+import { login } from "../store/sessionSlice";
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch();
 
-  const handleLogin = () => {};
+  const handleLogin = async (e) => {
+    e.preventDefault(); // Prevent form from refreshing the page
+    setIsLoading(true); // Show loading
+
+    // Prepare the data for the request
+    const data = { email, password };
+
+    try {
+      const response = await fetch("https://mazadoman.com/backend/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Login successful, save the token in localStorage
+
+        toast.success(result.message);
+        dispatch(login({ user: result.user, token: result.token }));
+
+        // Optionally, store the token in localStorage/sessionStorage for persistence
+        localStorage.setItem("authToken", result.token);
+        // Redirect to dashboard or another protected page
+        window.location.href = "/admin/dashboard"; // Or use `router.push("/dashboard")` with Next.js routing
+      } else {
+        // Login failed, show error
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error("Something went wrong. Please try again later.");
+      console.error(error);
+    } finally {
+      setIsLoading(false); // Hide loading
+    }
+  };
 
   return (
     <div
@@ -18,6 +63,7 @@ export default function LoginPage() {
         backgroundImage: `url(${assets.hero})`, // Adjust the image path
       }}
     >
+      <Loading isLoading={isLoading} />
       <Toaster position="top-center" reverseOrder={false} />
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
@@ -36,6 +82,8 @@ export default function LoginPage() {
             </label>
             <input
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
               placeholder="you@example.com"
@@ -50,6 +98,8 @@ export default function LoginPage() {
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 className="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 placeholder="••••••••"

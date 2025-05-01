@@ -1,38 +1,43 @@
 "use client";
+
 import { assets } from "@/assets/assets";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { tenders } from "../constants/tenders";
+import Link from "next/link";
 import { formatDate } from "../utils/formatDate";
-import { useRouter } from "next/navigation";
 import Loading from "../components/LoadingSpinner";
 
 export default function TenderPage() {
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [tenders, setTenders] = useState([]);
-  const [error, setError] = useState(null);
+  const searchParams = useSearchParams();
+  const categoryTitle = searchParams.get("title") || "All Tenders"; // Get the category title from the query
   const router = useRouter();
+  const [query, setQuery] = useState("");
+
+  const [tenders, setTenders] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Replace with your real API URL
-    fetch("https://mazadoman.com/backend/api/tenders")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch tenders.");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setTenders(data.tenders); // depends on your API response
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setError(err.message);
-        setLoading(false);
-      });
-  }, []);
+    const fetchTenders = async () => {
+      setLoading(true); // start loading
+      try {
+        const encodedCategory = encodeURIComponent(categoryTitle); // encode spaces, special chars
+        const response = await fetch(
+          `https://mazadoman.com/backend/api/tenders/category/${encodedCategory}`
+        );
+        const data = await response.json();
+        setTenders(data.tenders || []); // fallback empty array if no tenders
+      } catch (error) {
+        console.error("Error fetching tenders:", error);
+        setTenders([]);
+      } finally {
+        setLoading(false); // stop loading
+      }
+    };
 
+    fetchTenders();
+  }, [categoryTitle]); // re-run when category changes
   const filteredTenders = tenders.filter(
     (tender) =>
       tender?.title.toLowerCase().includes(query.toLowerCase()) ||
@@ -53,11 +58,11 @@ export default function TenderPage() {
         />
         <div className="absolute inset-0 bg-black/50 flex flex-col justify-center items-center text-center text-white px-4">
           <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-            Welcome to E-Tendering Portal
+            {categoryTitle}
           </h1>
           <p className="max-w-2xl mb-6 text-lg">
-            Explore and submit offers for the latest government and private
-            tenders across Oman.
+            All the tenders of this category below, you can search tenders of
+            this category by Id
           </p>
           <input
             type="text"
@@ -71,7 +76,7 @@ export default function TenderPage() {
 
       {/* Latest Tenders */}
       <section className="max-w-7xl mx-auto px-4 py-12">
-        <h2 className="text-3xl text-center font-bold text-orange-800 mb-6">
+        <h2 className="text-3xl text-center font-bold text-slate-800 mb-6">
           All Tenders
         </h2>
 
@@ -86,7 +91,7 @@ export default function TenderPage() {
                 <div className="relative w-full h-48 shrink-0">
                   <Image
                     src={"https://mazadoman.com/backend/" + tender?.image}
-                    alt={tender?.title || ""}
+                    alt={tender?.title || "image"}
                     fill
                     className="object-cover"
                     sizes="(max-width:1024px) 100vw, 25vw"

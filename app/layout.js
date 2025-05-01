@@ -1,7 +1,11 @@
+"use client";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "./components/Header";
 import "@fortawesome/fontawesome-free/css/all.min.css";
+import { Provider } from "react-redux";
+import store from "./store/store"; // Import your Redux store
+import Footer from "./components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,19 +17,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata = {
-  title: "MazadOman",
-  description: "Digital Tendering & Auction Platform",
-};
-
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Header />
-        {children}
+        <Provider store={store}>
+          {/* Wrap with Redux Provider */}
+          <Header />
+          {children}
+          <Footer />
+        </Provider>
       </body>
     </html>
   );

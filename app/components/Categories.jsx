@@ -1,6 +1,8 @@
+"use client";
 // components/Categories.jsx
 import { assets } from "@/assets/assets";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 const categories = [
   { title: "Property", iconSrc: assets.c1, bg: "bg-indigo-100" },
@@ -40,6 +42,12 @@ const categories = [
 ];
 
 export default function Categories() {
+  const router = useRouter();
+
+  const handleCategoryClick = (title) => {
+    router.push(`/category_tender?title=${encodeURIComponent(title)}`);
+  };
+
   return (
     <section className="max-w-6xl mx-auto px-4 py-10">
       <h2 className="mb-6 text-2xl font-semibold">Categories</h2>
@@ -49,6 +57,7 @@ export default function Categories() {
         {categories.map(({ title, iconSrc, bg }) => (
           <div
             key={title}
+            onClick={() => handleCategoryClick(title)}
             className={`${bg} rounded-lg flex flex-col items-center justify-center aspect-square cursor-pointer shadow-sm hover:shadow-md transition`}
           >
             <Image src={iconSrc} alt={title} width={60} height={60} priority />

@@ -1,25 +1,82 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
-import { assets } from "@/assets/assets";
+import Link from "next/link";
+import { assets } from "@/assets/assets"; // your own images
+import Loading from "../components/LoadingSpinner";
 
 export default function RegisterPage() {
+  const [companyName, setCompanyName] = useState("");
+  const [personName, setPersonName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [logoFile, setLogoFile] = useState(null);
+  const [crFile, setCrFile] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = () => {};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match!");
+      setIsLoading(false);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("company_name", companyName);
+    formData.append("person_name", personName);
+    formData.append("phone_number", phone);
+    formData.append("email", email);
+    formData.append("password", password);
+    formData.append("logo", logoFile);
+    formData.append("cr_file", crFile);
+
+    try {
+      const response = await fetch(
+        "https://mazadoman.com/backend/api/register",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("Registration successful!");
+        window.location.href = "/login";
+        // Redirect or clear form here
+      } else {
+        if (data && typeof data === "object") {
+          const firstError = Object.values(data)[0][0];
+          toast.error(firstError || "Registration failed!");
+        } else {
+          toast.error("Registration failed!");
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Something went wrong!");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div
       className="flex min-h-screen items-center justify-center bg-cover bg-center px-4"
-      style={{
-        backgroundImage: `url(${assets.hero})`, // Adjust path
-      }}
+      style={{ backgroundImage: `url(${assets.hero})` }}
     >
       <Toaster position="top-center" reverseOrder={false} />
+      <Loading isLoading={isLoading} />
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -38,6 +95,7 @@ export default function RegisterPage() {
             <input
               type="file"
               accept="image/*"
+              onChange={(e) => setLogoFile(e.target.files[0])}
               className="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           </div>
@@ -49,6 +107,8 @@ export default function RegisterPage() {
             </label>
             <input
               type="text"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
               required
               className="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
               placeholder="Company Name"
@@ -62,6 +122,8 @@ export default function RegisterPage() {
             </label>
             <input
               type="text"
+              value={personName}
+              onChange={(e) => setPersonName(e.target.value)}
               required
               className="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
               placeholder="John Doe"
@@ -75,6 +137,8 @@ export default function RegisterPage() {
             </label>
             <input
               type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               required
               className="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
               placeholder="+1234567890"
@@ -88,6 +152,8 @@ export default function RegisterPage() {
             </label>
             <input
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
               placeholder="you@example.com"
@@ -101,6 +167,8 @@ export default function RegisterPage() {
             </label>
             <input
               type="file"
+              accept=".pdf, .jpg, .jpeg, .png"
+              onChange={(e) => setCrFile(e.target.files[0])}
               className="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           </div>
@@ -113,6 +181,8 @@ export default function RegisterPage() {
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 className="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 placeholder="Create a password"
@@ -135,6 +205,8 @@ export default function RegisterPage() {
             <div className="relative">
               <input
                 type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 className="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 placeholder="Confirm your password"
@@ -149,7 +221,7 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Terms and Conditions */}
+          {/* Terms */}
           <div className="flex items-center">
             <input
               id="terms"
