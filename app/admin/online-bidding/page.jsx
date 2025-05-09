@@ -3,16 +3,117 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
 export default function OnlineBidding() {
-  const dummyTender = {
-    companyName: "ABC Corp",
-    tenderNo: "T-12345",
-    tenderName: "Supply of Equipment",
-    biddersCount: 5,
-    startTime: "10:00 AM",
-    endTime: "11:30 AM",
-    timeLeft: "06:30",
-    currentBid: "150.000",
-    currency: "OMR",
+  const [fullBidTender, setFullBidTender] = useState(null);
+  const user = useSelector((state) => state.session.user);
+  const [remainingTime, setRemainingTime] = useState("");
+
+  const [currentBids, setCurrentBids] = useState([]);
+  const [upcomingBids, setUpcomingBids] = useState([]);
+  const [bids, setBids] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [bidPlaced, setBidPlaced] = useState(false);
+  const [userBidAmount, setUserBidAmount] = useState("");
+
+  useEffect(() => {
+    if (!fullBidTender) return;
+
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const end = new Date(
+        `${fullBidTender.bid_start_date}T${fullBidTender.bid_end_time}`
+      ).getTime();
+
+      const distance = end - now;
+
+      if (distance <= 0) {
+        setRemainingTime("00:00:00");
+        clearInterval(interval);
+      } else {
+        const hours = String(Math.floor(distance / (1000 * 60 * 60))).padStart(
+          2,
+          "0"
+        );
+        const minutes = String(
+          Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
+        ).padStart(2, "0");
+        const seconds = String(
+          Math.floor((distance % (1000 * 60)) / 1000)
+        ).padStart(2, "0");
+
+        setRemainingTime(`${hours}:${minutes}:${seconds}`);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [fullBidTender]);
+
+  useEffect(() => {
+    const fetchBids = async () => {
+      try {
+        const response = await fetch(
+          `https://mazadoman.com/backend/api/bids/user/${user?.id}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch bids");
+        }
+
+        const data = await response.json();
+        console.log(data.data);
+        setBids(data.data);
+      } catch (err) {
+        console.error(err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBids();
+  }, [user?.id]);
+  // Dummy data (to be replaced with API call)
+
+  useEffect(() => {
+    const now = new Date();
+
+    const tendersWithDates = bids.map((bid) => {
+      console.log(bid.bid_start_date);
+      const startDateTimeString = `${bid.bid_start_date}T${bid.bid_start_time}`;
+      const endDateTimeString = `${bid.bid_start_date}T${bid.bid_end_time}`;
+
+      return {
+        ...bid,
+        startDate: new Date(startDateTimeString),
+        endDate: new Date(endDateTimeString),
+      };
+    });
+
+    const fullBid = tendersWithDates.find((tender) => {
+      const timeUntilStart = tender.startDate.getTime() - now.getTime();
+      return timeUntilStart <= 30 * 60 * 1000 && tender.endDate > now;
+    });
+
+    if (fullBid) {
+      setFullBidTender(fullBid);
+    } else {
+      const current = tendersWithDates.filter((t) => {
+        const timeLeft = t.endDate.getTime() - now.getTime();
+        return (
+          t.startDate <= now &&
+          t.endDate > now &&
+          timeLeft <= 24 * 60 * 60 * 1000
+        );
+      });
+
+      const upcoming = tendersWithDates.filter((t) => t.startDate > now);
+      setCurrentBids(current);
+      setUpcomingBids(upcoming);
+    }
+  }, [bids]);
+
+  const handleBidChange = (e) => {
+    setUserBidAmount(e.target.value); // Update the bid amount as the user types
   };
 
   const handleBidSubmit = async () => {
