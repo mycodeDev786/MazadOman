@@ -3,28 +3,33 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Loading from "@/app/components/LoadingSpinner";
+import { useSelector } from "react-redux";
 
 export default function TenderPage() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
+  const user = useSelector((state) => state.session.user);
   const [tender, setTender] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const router = useRouter();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showResubmitModal, setShowResubmitModal] = useState(false);
+  const [additionalFiles, setAdditionalFiles] = useState([]);
+  const [technicalOffer, setTechnicalOffer] = useState(null);
+  const [commercialOffer, setCommercialOffer] = useState(null);
+  const [totalOffer, setTotalOffer] = useState(null);
 
-  const [formData, setFormData] = useState({
-    quote_amount: "",
-    technical_offer: "",
-    commercial_offer: "",
-  });
+  const handleFileChange = (e) => {
+    const selectedFiles = Array.from(e.target.files); // convert FileList to array
+    setAdditionalFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
+  };
 
   useEffect(() => {
     const fetchTenderInformation = async () => {
       try {
         const response = await fetch(
-          `https://mazadoman.com/backend/api/quotes/tender/${id}`
+          `https://mazadoman.com/backend/api/quotes/show/${id}/${user?.id}`
         );
 
         if (!response.ok) {
@@ -33,14 +38,11 @@ export default function TenderPage() {
         }
 
         const data = await response.json();
-        setTender(data.data[0]);
+        console.log(data.data);
+        setTender(data.data);
+        setTotalOffer(data.data.quote_amount);
 
         // Pre-fill form data for editing
-        setFormData({
-          quote_amount: data.data[0]?.quote_amount || "",
-          technical_offer: "",
-          commercial_offer: "",
-        });
       } catch (err) {
         setError(err.message);
       } finally {
@@ -48,11 +50,11 @@ export default function TenderPage() {
       }
     };
 
-    if (id) fetchTenderInformation();
+    fetchTenderInformation();
   }, [id]);
 
   const isBiddingBooked =
-    tender?.status && tender?.status.toLowerCase().includes("booked");
+    tender?.status && tender?.status.toLowerCase().includes("approve");
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
@@ -63,11 +65,51 @@ export default function TenderPage() {
     }
   };
 
-  const handleSubmit = (type) => {
+  const handleSubmit = async (type) => {
     // Add API request here to either edit or resubmit
-    alert(`${type} submitted: ` + JSON.stringify(formData));
+    setLoading(true);
+    const formData = new FormData();
+
+    // Append only if the field exists
+    if (totalOffer !== undefined) {
+      formData.append("quote_amount", totalOffer);
+    }
+
+    if (technicalOffer) {
+      formData.append("technical_offer", technicalOffer);
+    }
+
+    if (commercialOffer) {
+      formData.append("commercial_offer", commercialOffer);
+    }
+    console.log(id);
+    try {
+      const response = await fetch(
+        `https://mazadoman.com/backend/api/quotes/update/${tender?.quote_id}`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error("Error:", result);
+        setLoading(false);
+      } else {
+        console.log("Quote updated:", result);
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error("Fetch error:", error);
+    }
+
     setShowEditModal(false);
     setShowResubmitModal(false);
+
+    setLoading(false);
+    router.push("/admin/tender-quoted");
   };
 
   return (
@@ -148,6 +190,26 @@ export default function TenderPage() {
               Download
             </a>
           </div>
+          <div>
+            <span className="text-gray-500">Additional Files:</span>
+            <div className="ml-2 mt-1 space-y-1">
+              {tender?.additional_files?.length > 0 ? (
+                tender.additional_files.map((file, index) => (
+                  <div key={index}>
+                    <a
+                      href={`https://mazadoman.com/backend/${file}`}
+                      className="text-blue-600 hover:underline"
+                      download
+                    >
+                      File {index + 1}
+                    </a>
+                  </div>
+                ))
+              ) : (
+                <span className="text-gray-400">No additional files</span>
+              )}
+            </div>
+          </div>
 
           <div>
             <span className="text-gray-500">Date & Time for Bidding:</span>{" "}
@@ -182,7 +244,8 @@ export default function TenderPage() {
       {/* Modal Template */}
       {(showEditModal || showResubmitModal) && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-md p-6 w-full max-w-md">
+          <div className="bg-white rounded-lg shadow-md p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <Loading isLoading={loading} />
             <h2 className="text-xl font-semibold mb-4">
               {showEditModal ? "Edit Quotation" : "Resubmit Quotation"}
             </h2>
@@ -200,8 +263,8 @@ export default function TenderPage() {
                 <input
                   type="number"
                   name="quote_amount"
-                  value={formData.quote_amount}
-                  onChange={handleInputChange}
+                  value={totalOffer}
+                  onChange={(e) => setTotalOffer(e.target.value)}
                   className="w-full mt-1 p-2 border rounded"
                   required
                 />
@@ -215,8 +278,8 @@ export default function TenderPage() {
                   type="file"
                   name="technical_offer"
                   accept=".pdf"
-                  onChange={handleInputChange}
-                  className="w-full mt-1"
+                  onChange={(e) => setTechnicalOffer(e.target.value)}
+                  className="w-full border p-1.5 mt-1"
                 />
               </div>
 
@@ -228,12 +291,38 @@ export default function TenderPage() {
                   type="file"
                   name="commercial_offer"
                   accept=".pdf"
-                  onChange={handleInputChange}
-                  className="w-full mt-1"
+                  onChange={(e) => setCommercialOffer(e.target.value)}
+                  className="w-full border p-1.5 mt-1"
                 />
               </div>
 
-              <div className="flex justify-end space-x-2">
+              {/* Tender additional */}
+              <div>
+                <label
+                  htmlFor="additional_documents"
+                  className="block text-lg font-medium mb-2"
+                >
+                  Edit additional documents:
+                </label>
+
+                <input
+                  type="file"
+                  id="additional_documents"
+                  multiple
+                  onChange={handleFileChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                />
+
+                {additionalFiles.length > 0 && (
+                  <ul className="mt-4 space-y-1 text-sm text-gray-700">
+                    {additionalFiles.map((file, index) => (
+                      <li key={index}>📄 {file.name}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <div className="flex justify-end space-x-2 mt-4">
                 <button
                   type="button"
                   className="bg-gray-300 px-4 py-2 rounded"

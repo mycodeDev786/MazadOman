@@ -19,7 +19,6 @@ export default function TenderPostPage() {
   const [image, setImage] = useState(null);
   const [scope, setScope] = useState(null);
   const [boq, setBoq] = useState(null);
-  const [additional_image, setAdditionalImage] = useState(null);
   const [additionalFiles, setAdditionalFiles] = useState([]);
 
   const [awardedToUserId, setAwardedToUserId] = useState("");

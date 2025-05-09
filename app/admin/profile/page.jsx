@@ -12,6 +12,8 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isCrLoaded, setIsCrLoaded] = useState(false);
   const [formData, setFormData] = useState(user);
+  const [logo, setLogo] = useState(null);
+  const [cr, setCr] = useState(null);
 
   // format date
   const formattedDate = new Date(user?.created_at).toLocaleDateString("en-US", {
@@ -58,27 +60,49 @@ export default function ProfilePage() {
     setIsCrLoaded(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    setLoading(true);
     const data = new FormData();
     data.append("company_name", formData.company_name);
     data.append("person_name", formData.person_name);
     data.append("phone_number", formData.phone_number);
     data.append("email", formData.email);
 
-    if (formData.logo) {
-      data.append("logo", formData.logo);
+    if (logo) {
+      data.append("logo", logo);
     }
-    if (formData.cr_file) {
-      data.append("cr_file", formData.cr_file);
+    if (cr) {
+      data.append("cr_file", cr);
     }
 
-    // Now you can send `data` to your API
-    // Example:
-    // axios.post('/api/update-profile', data)
+    try {
+      const response = await fetch(
+        `https://mazadoman.com/backend/api/company-user/update/${user.id}`,
+        {
+          method: "POST",
+          body: data,
+          // Do NOT set Content-Type manually for FormData in fetch — browser sets it correctly
+        }
+      );
 
-    console.log([...data.entries()]); // for debugging
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Update failed:", errorData);
+        // Optionally display validation errors to user
+        return;
+      }
 
-    setIsEditing(false); // close modal
+      const result = await response.json();
+      console.log("Update success:", result);
+
+      // Optionally refresh UI or notify user
+      setIsEditing(false); // close modal
+      setLoading(false);
+    } catch (error) {
+      console.error("Fetch error:", error);
+      // Optionally display a generic error message
+      setIsEditing(false);
+    }
   };
 
   return (
@@ -184,9 +208,7 @@ export default function ProfilePage() {
                   type="file"
                   className="border p-1.5"
                   accept="image/*"
-                  onChange={(e) =>
-                    setFormData({ ...formData, logo: e.target.files[0] })
-                  }
+                  onChange={(e) => setLogo(e.target.files[0])}
                 />
               </div>
 
@@ -197,9 +219,7 @@ export default function ProfilePage() {
                   type="file"
                   className="border p-1.5"
                   accept="application/pdf"
-                  onChange={(e) =>
-                    setFormData({ ...formData, cr_file: e.target.files[0] })
-                  }
+                  onChange={(e) => setCr(e.target.files[0])}
                 />
               </div>
 

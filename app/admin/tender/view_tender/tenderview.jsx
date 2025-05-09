@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Loading from "@/app/components/LoadingSpinner";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function TenderPage() {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,8 +14,111 @@ export default function TenderPage() {
   const [tender, setTender] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const [bid_start_date, setBidStartDate] = useState(null);
+  const [bid_start_time, setBidStartTime] = useState(null);
+  const [bid_end_time, setBidEndTime] = useState(null);
+  const [bidding_price, setBiddingPrice] = useState(null);
+  const [bid_countDown_time, SetBidCountDownTime] = useState(null);
+  const [quote_status, setQuoteStatus] = useState(null);
   const [editTender, setEditTender] = useState(tender);
+  const [scope, setScope] = useState(null);
+  const [boq, setBoq] = useState(null);
+  const [existingFiles, setExistingFiles] = useState([]); // Fetched from backend
+  const [deletedFileIds, setDeletedFileIds] = useState([]);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [additionalFiles, setAdditionalFiles] = useState([]);
+
+  const handleFileChange = (e) => {
+    const selectedFiles = Array.from(e.target.files); // convert FileList to array
+    setAdditionalFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
+  };
+
+  const handleRemoveExistingFile = (fileId) => {
+    setExistingFiles((prev) => prev.filter((file) => file.id !== fileId));
+    setDeletedFileIds((prev) => [...prev, fileId]);
+  };
+
+  const [selectedBidders, setSelectedBidders] = useState([]);
+
+  const handleUpdateStatus = async (quote_id) => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `https://mazadoman.com/backend/api/quotes/${quote_id}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            // Include the token if your API is protected
+            // 'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            status: quote_status,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle errors returned by API
+        console.error("Error updating status:", data.message);
+
+        setLoading(false);
+      } else {
+        toast.success("Status updated successfully");
+
+        // Optionally refresh data here
+      }
+    } catch (error) {
+      console.error("Network or server error:", error);
+      toast.error("Failed to update status. Please try again.");
+    }
+    setLoading(false);
+  };
+
+  const handleSubmit = async (e) => {
+    setLoading(true);
+    e.preventDefault();
+    console.log(selectedBidders);
+    const formDataToSend = new FormData();
+    formDataToSend.append("tender_id", tender.tender_id); // Send tender ID
+    formDataToSend.append("bidding_price", bidding_price);
+    selectedBidders.forEach((uuid) => {
+      formDataToSend.append("bidders[]", uuid);
+    });
+
+    formDataToSend.append("bid_start_date", bid_start_date);
+    formDataToSend.append("bid_start_time", bid_start_time);
+    formDataToSend.append("bid_end_time", bid_end_time);
+    formDataToSend.append("countdown_time", bid_countDown_time);
+
+    try {
+      const response = await fetch("https://mazadoman.com/backend/api/bids", {
+        method: "POST",
+        body: formDataToSend,
+        // No headers for FormData!
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to submit bid.");
+      }
+
+      toast.success("Bid submitted successfully!");
+      setLoading(false);
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Bid submission error:", error.message);
+      toast.error("Error submitting bid: " + error.message);
+      setLoading(false);
+      setIsModalOpen(false);
+    }
+  };
 
   useEffect(() => {
     const fetchTenderInformation = async () => {
@@ -31,6 +135,8 @@ export default function TenderPage() {
         const data = await response.json();
 
         setTender(data.tender);
+
+        setExistingFiles(data.tender.additional_files);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -61,14 +167,75 @@ export default function TenderPage() {
     fetchTenderInformation();
   }, [id]);
 
+  // Add or remove `overflow-hidden` class from the body based on modal state
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.classList.add("overflow-hidden");
+    } else {
+      document.body.classList.remove("overflow-hidden");
+    }
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, [isModalOpen]);
+
   const openModal = () => {
     setEditTender(tender); // load current data into form
     setIsOpen(true);
   };
 
-  const submitEdit = () => {
-    // update state
-    setIsOpen(false);
+  const submitEdit = async () => {
+    setLoading(true);
+    const formData = new FormData();
+
+    // Append only non-empty values
+    console.log(editTender.title);
+    if (editTender.title) formData.append("title", editTender.title);
+
+    if (editTender.description)
+      formData.append("description", editTender.description);
+    if (editTender.bid_end_date)
+      formData.append("bid_end_date", editTender.bid_end_date);
+
+    if (scope) formData.append("scope", scope);
+    if (boq) formData.append("boq", boq);
+
+    additionalFiles.forEach((file, index) => {
+      formData.append(`additional_files[${index}]`, file);
+    });
+
+    // ✅ Log FormData contents
+    console.log("FormData entries:");
+    for (let pair of formData.entries()) {
+      if (pair[1] instanceof File) {
+        console.log(`${pair[0]}: [File] ${pair[1].name}`);
+      } else {
+        console.log(`${pair[0]}: ${pair[1]}`);
+      }
+    }
+
+    try {
+      const res = await fetch(
+        `https://mazadoman.com/backend/api/tenders/update/${editTender.tender_id}`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const result = await res.json();
+
+      if (res.ok) {
+        setLoading(false);
+        setIsOpen(false);
+        // Optionally refresh or update UI
+      } else {
+        console.error(result);
+      }
+    } catch (err) {
+      setLoading(false);
+      console.error("Error:", err);
+    }
   };
 
   const handleChange = (e) => {
@@ -76,17 +243,10 @@ export default function TenderPage() {
     setEditTender((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleActionChange = (id, newAction) => {
-    setCompanies((prev) =>
-      prev.map((comp) =>
-        comp.id === id ? { ...comp, action: newAction } : comp
-      )
-    );
-  };
-
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <Loading isLoading={loading} />
+      <Toaster position="top-center" reverseOrder={false} />
       <h1 className="text-2xl font-bold text-center mb-4">
         Tender Information
       </h1>
@@ -125,9 +285,10 @@ export default function TenderPage() {
         onClose={() => setIsOpen(false)}
         className="relative z-50"
       >
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+        <Loading isLoading={loading} />
+        <div className="fixed inset-0 bg-black/30 " aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="bg-white rounded max-w-md w-full p-6 shadow-xl">
+          <Dialog.Panel className="bg-white rounded max-w-md w-full max-h-[90vh] overflow-y-auto p-6 shadow-xl">
             <Dialog.Title className="text-lg font-bold mb-4">
               Edit Tender Info
             </Dialog.Title>
@@ -160,6 +321,75 @@ export default function TenderPage() {
                   className="w-full border p-2 rounded"
                 />
               </div>
+
+              {/* Tender Scope */}
+              <div>
+                <label htmlFor="image" className="block font-medium">
+                  Edit Scope of Work:
+                </label>
+
+                <input
+                  type="file"
+                  id="scope"
+                  onChange={(e) => setScope(e.target.files[0])}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                />
+              </div>
+              {/* Tender BOQ */}
+              <div>
+                <label htmlFor="image" className="block font-medium mb-2">
+                  Edit the BOQ:
+                </label>
+                <input
+                  type="file"
+                  id="boq"
+                  onChange={(e) => setBoq(e.target.files[0])}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                />
+              </div>
+
+              {/* Tender additional */}
+              <div>
+                <label
+                  htmlFor="additional_documents"
+                  className="block font-medium  mb-2"
+                >
+                  Edit additional documents:
+                </label>
+
+                <input
+                  type="file"
+                  id="additional_documents"
+                  multiple
+                  onChange={handleFileChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                />
+
+                {existingFiles?.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm font-semibold mb-1">
+                      Previously uploaded:
+                    </p>
+                    <ul className="space-y-1 text-sm text-gray-700">
+                      {existingFiles.map((file) => (
+                        <li
+                          key={file.id}
+                          className="flex items-center justify-between"
+                        >
+                          <span>📎 {file.file_path.split("/").pop()}</span>
+                          <button
+                            onClick={() => handleRemoveExistingFile(file.id)}
+                            className="text-red-600 hover:underline text-xs"
+                          >
+                            Remove
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
               <div className="flex justify-end space-x-2 mt-4">
                 <button
                   onClick={() => setIsOpen(false)}
@@ -187,24 +417,41 @@ export default function TenderPage() {
           <table className="w-full border border-gray-300">
             <thead className="bg-gray-100">
               <tr>
+                <th className="p-2 border">Select Company</th>
                 <th className="p-2 border">Company Name</th>
                 <th className="p-2 border">Profile</th>
                 <th className="p-2 border">Total Offer</th>
                 <th className="p-2 border">Action</th>
                 <th className="p-2 border">Download Technical</th>
                 <th className="p-2 border">Download Commercial</th>
+                <th className="p-2 border"> Update Status</th>
               </tr>
             </thead>
             <tbody>
               {quotes.map((comp) => (
                 <tr key={comp.quote_id} className="text-center">
+                  <td className="p-2 border">
+                    <input
+                      type="checkbox"
+                      checked={selectedBidders.includes(comp.user_id)}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        const id = comp.user_id;
+                        setSelectedBidders((prev) =>
+                          checked
+                            ? [...prev, id]
+                            : prev.filter((bidderId) => bidderId !== id)
+                        );
+                      }}
+                    />
+                  </td>
                   <td className="p-2 border">{comp.company_name}</td>
                   <td className="p-2 border">
                     <div
                       onClick={() => {
                         router.push(
                           `/admin/view_company_profile?id=${encodeURIComponent(
-                            tender?.user_id
+                            comp?.user_id
                           )}`
                         );
                       }}
@@ -216,25 +463,23 @@ export default function TenderPage() {
                   <td className="p-2 border">{comp.quote_amount} OMR</td>
                   <td className="p-2 border">
                     <select
-                      value={comp.action}
-                      onChange={(e) =>
-                        handleActionChange(comp.id, e.target.value)
-                      }
+                      value={quote_status}
+                      onChange={(e) => setQuoteStatus(e.target.value)}
                       className="border p-1 rounded"
                     >
                       <option value="">-- Select --</option>
                       <option value="approve">Approve</option>
                       <option value="reject">Reject</option>
-                      <option value="submit-tech">
-                        Submit Technical Offer
+                      <option value="Submit technical offer">
+                        Submit technical Offer
                       </option>
-                      <option value="resubmit-comm">
-                        Resubmit Commercial Offer
+                      <option value="resubmit the commtial offer.">
+                        Resubmit the commtial offer.
                       </option>
                       <option value="postpond">Postpond</option>
-                      <option value="tender-cancel">Tender Canceled</option>
-                      <option value="cancelled">Cancelled</option>
-                      <option value="award">Award the Job</option>
+                      <option value="tender canceled">Tender Canceled</option>
+                      <option value="Cancelled">Cancelled</option>
+                      <option value="Award the job">Award the Job</option>
                     </select>
                   </td>
                   <td className="p-2 border">
@@ -255,11 +500,167 @@ export default function TenderPage() {
                       Download
                     </a>
                   </td>
+                  <td className="p-2 border">
+                    <button
+                      onClick={() => handleUpdateStatus(comp.quote_id)}
+                      className="bg-amber-500 rounded-sm text-white cursor-pointer p-1.5"
+                    >
+                      Update
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </>
+      )}
+      {/* ADD BID DETAILS BUTTON */}
+      <div className="mt-10 justify-evenly">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-orange-500 cursor-pointer text-white px-4 py-2 rounded shadow-lg hover:bg-orange-600"
+        >
+          Add Bid Details
+        </button>
+
+        <button
+          onClick={() => {
+            router.push(
+              `/admin/view_result?id=${encodeURIComponent(tender?.tender_id)}`
+            );
+          }}
+          className="bg-purple-500 cursor-pointer ml-4 text-white px-4 py-2 rounded shadow-lg hover:bg-purple-600"
+        >
+          View Bid Result
+        </button>
+      </div>
+      {/* Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg overflow-auto max-h-screen">
+            <h2 className="text-xl font-bold mb-4">Add Bid Details</h2>
+            <form className="space-y-4">
+              {/* Tender Field */}
+              <div>
+                <label className="block font-medium mb-1">
+                  Selected Tender:
+                </label>
+                <input
+                  type="text"
+                  name="tender"
+                  value={tender?.tender_id + tender.title}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter tender name"
+                />
+              </div>
+
+              {/* Bidders Field */}
+              <div>
+                <label className="block font-medium mb-1">
+                  Selected Bidders (IDs):
+                </label>
+                <input
+                  type="text"
+                  name="bidders"
+                  value={selectedBidders.join(", ")}
+                  readOnly
+                  className="w-full border border-gray-300 p-2 rounded bg-gray-100"
+                />
+              </div>
+
+              {/* Bidding Price */}
+              <div>
+                <label className="block font-medium mb-1">
+                  Bidding Price Starting:
+                </label>
+                <input
+                  type="number"
+                  name="biddingPrice"
+                  value={bidding_price}
+                  onChange={(e) => setBiddingPrice(e.target.value)}
+                  className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter starting price"
+                />
+              </div>
+
+              {/* Date Field */}
+              <div>
+                <label className="block font-medium mb-1">Date:</label>
+                <input
+                  type="date"
+                  name="date"
+                  value={bid_start_date}
+                  onChange={(e) => setBidStartDate(e.target.value)}
+                  className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Start Time */}
+              <div>
+                <label className="block font-medium mb-1">
+                  Bidding Time Start:
+                </label>
+                <input
+                  type="time"
+                  name="startTime"
+                  value={bid_start_time}
+                  onChange={(e) => setBidStartTime(e.target.value)}
+                  className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* End Time */}
+              <div>
+                <label className="block font-medium mb-1">
+                  Bidding Time End:
+                </label>
+                <input
+                  type="time"
+                  name="endTime"
+                  value={bid_end_time}
+                  onChange={(e) => setBidEndTime(e.target.value)}
+                  className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Countdown Time */}
+              <div>
+                <label className="block font-medium mb-1">
+                  Bidding Countdown Time (max 10 mins):
+                </label>
+                <input
+                  type="number"
+                  name="countdownTime"
+                  value={bid_countDown_time}
+                  onChange={(e) => SetBidCountDownTime(e.target.value)}
+                  className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Maximum 10 mins"
+                  min="1"
+                  max="10"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-2 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  Submit
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

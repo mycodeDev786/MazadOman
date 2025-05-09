@@ -7,7 +7,6 @@ export default function TenderQuoted() {
   const router = useRouter();
   const [quotedTenders, setQuotedTenders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tenders, setTenders] = useState([]);
   const [error, setError] = useState(null);
 
   const user = useSelector((state) => state.session.user);
@@ -22,7 +21,7 @@ export default function TenderQuoted() {
     }
 
     // Fetch tenders by user ID
-    fetch(`https://mazadoman.com/backend/api/quotes/user/${userId}`)
+    fetch(`https://mazadoman.com/backend/api/quotes/all/${userId}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error("Failed to fetch tenders.");

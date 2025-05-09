@@ -21,6 +21,12 @@ export default function TenderDetails() {
   const [commercialOffer, setCommercialOffer] = useState(null);
   const [totalOffer, setTotalOffer] = useState(0);
   const user = useSelector((state) => state.session.user);
+  const [additionalFiles, setAdditionalFiles] = useState([]);
+
+  const handleFileChange = (e) => {
+    const selectedFiles = Array.from(e.target.files); // convert FileList to array
+    setAdditionalFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -82,7 +88,11 @@ export default function TenderDetails() {
       formData.append("quote_amount", totalOffer);
       formData.append("user_id", user?.id);
       formData.append("tender_id", id);
-
+      if (additionalFiles && additionalFiles.length > 0) {
+        additionalFiles.forEach((file) => {
+          formData.append("additional_files[]", file);
+        });
+      }
       const response = await fetch(
         "https://mazadoman.com/backend/api/quotes/post",
         {
@@ -101,6 +111,7 @@ export default function TenderDetails() {
       router.push("/admin/dashboard"); // Or redirect wherever appropriate
     } catch (error) {
       console.error(error);
+      toast.error(error.message);
       setError(error.message || "An unexpected error occurred.");
     } finally {
       setLoading(false);
@@ -128,17 +139,22 @@ export default function TenderDetails() {
               <p>
                 <strong>Company:</strong> {tender?.companyuser?.company_name}
               </p>
+              <p className="text-gray-700 whitespace-pre-line ">
+                <strong>Description:</strong> {tender.description}
+              </p>
               <p>
                 <strong>Budget:</strong> {tender.budget}
+              </p>
+              <p className="text-red-600">
+                <strong className=" text-bold ">Deadline:</strong>{" "}
+                {formatDate(tender.bid_end_date)}
               </p>
               <p>
                 <strong>Created and Last Updated Date:</strong>{" "}
                 {formatDate(tender.created_at)}
               </p>
             </div>
-            <p className="text-gray-700 whitespace-pre-line mb-6">
-              <strong>Description:</strong> {tender.description}
-            </p>
+
             <div className="flex flex-wrap gap-4 mb-10">
               <a
                 href={"https://mazadoman.com/backend/" + tender?.boq}
@@ -271,6 +287,32 @@ export default function TenderDetails() {
                     className="block w-full border border-gray-300 rounded p-2 text-sm"
                   />
                 </div>
+                {/*  additional */}
+                <div>
+                  <label
+                    htmlFor="additional_documents"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Upload additional documents:
+                  </label>
+
+                  <input
+                    type="file"
+                    id="additional_documents"
+                    multiple
+                    onChange={handleFileChange}
+                    className="block w-full border border-gray-300 rounded p-2 text-sm"
+                  />
+
+                  {additionalFiles.length > 0 && (
+                    <ul className="mt-4 space-y-1 text-sm text-gray-700">
+                      {additionalFiles.map((file, index) => (
+                        <li key={index}>📄 {file.name}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
                 <button
                   type="submit"
                   className="w-full py-2 cursor-pointer bg-orange-600 text-white font-semibold rounded-md hover:bg-orange-700 transition"
