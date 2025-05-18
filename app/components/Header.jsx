@@ -73,13 +73,13 @@ export default function Header() {
               E-Tenders
             </Link>
             <Link
-              href="/events"
+              href="/forward-auctions"
               className="hover:text-blue-600 hover:scale-105 transition-transform duration-200 ease-out"
             >
               Forward Auctions
             </Link>
             <Link
-              href="/events"
+              href="/reverse-auctions"
               className="hover:text-blue-600 hover:scale-105 transition-transform duration-200 ease-out"
             >
               Reverse Auctions
@@ -111,7 +111,7 @@ export default function Header() {
               ) : (
                 <button
                   onClick={handleProfileClick}
-                  className="relative rounded-full"
+                  className="relative cursor-pointer rounded-full"
                 >
                   <Image
                     src={

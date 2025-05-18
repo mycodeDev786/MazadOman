@@ -133,7 +133,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-gray-600 text-center text-xs text-gray-400 py-4">
+        <div className="border-t border-gray-600 text-center text-xs text-orange-400 py-4">
           © {new Date().getFullYear()} MazadOman™ — All Rights Reserved.
         </div>
       </div>

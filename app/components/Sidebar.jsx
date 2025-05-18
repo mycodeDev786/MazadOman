@@ -9,6 +9,8 @@ import {
   LogOut,
   PlusCircle,
   Gavel,
+  Upload,
+  HandCoins,
 } from "lucide-react"; // import icons
 import { useDispatch } from "react-redux";
 import { logout } from "../store/sessionSlice"; // Import logout action
@@ -28,6 +30,16 @@ export default function Sidebar() {
       href: "/admin/tender-quoted",
       icon: <FileText size={20} />,
     },
+    {
+      name: "Posted Auctions",
+      href: "/admin/auctions/posted-auctions",
+      icon: <Upload size={20} />,
+    }, // new
+    {
+      name: "Placed Bids (Auctions)",
+      href: "/admin/auctions/placed-bids",
+      icon: <HandCoins size={20} />,
+    }, // new
     {
       name: "Online Bidding",
       href: "/admin/online-bidding",
@@ -63,6 +75,14 @@ export default function Sidebar() {
         ))}
       </nav>
 
+      {/* auction Button */}
+      <Link
+        href="/admin/auctions/post-auction"
+        className={`flex items-center gap-3 p-2 rounded-lg mt-6 text-purple-700 hover:bg-blue-100`}
+      >
+        <PlusCircle size={20} />
+        <span>Create Auction</span>
+      </Link>
       {/* New Post Tender Button */}
       <Link
         href="/admin/post-tender"
@@ -74,7 +94,7 @@ export default function Sidebar() {
 
       <button
         onClick={handleLogout}
-        className="flex items-center gap-3 p-2 rounded-lg text-purple-700 hover:bg-red-100 mt-6"
+        className="flex items-center gap-3 p-2 cursor-pointer rounded-lg text-purple-700 hover:bg-red-100 mt-6"
       >
         <LogOut size={20} />
         <span>Logout</span>

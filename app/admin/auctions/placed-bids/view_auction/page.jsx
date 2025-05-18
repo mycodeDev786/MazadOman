@@ -1,11 +1,10 @@
 // app/tender_details/page.tsx
 import React, { Suspense } from "react";
-
-import TenderPage from "./tander_page";
+import TenderPage from "./auctionview";
 
 export default function Page() {
   return (
-    <Suspense fallback={<div></div>}>
+    <Suspense fallback={<div>Loading tender details...</div>}>
       <TenderPage />
     </Suspense>
   );

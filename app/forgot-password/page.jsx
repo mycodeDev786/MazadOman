@@ -3,10 +3,45 @@
 import { assets } from "@/assets/assets";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
+import Loading from "../components/LoadingSpinner";
 
 export default function ForgotPasswordPage() {
-  const handleReset = () => {};
+  const [email, setEmail] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const handleReset = async (e) => {
+    e.preventDefault();
+    if (!email) {
+      // setMessage('Please enter your email address.');
+      return;
+    }
+
+    setLoading(true);
+    console.log(email);
+
+    try {
+      const res = await fetch(
+        "https://mazadoman.com/backend/api/company-user/send-reset-link",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success("Reset link has been sent to your email.");
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div
@@ -15,6 +50,7 @@ export default function ForgotPasswordPage() {
         backgroundImage: `url(${assets.hero})`, // Adjust the image path
       }}
     >
+      <Loading isLoading={loading} />
       <Toaster position="top-center" reverseOrder={false} />
       <motion.div
         initial={{ opacity: 0, y: 50 }}
@@ -39,6 +75,7 @@ export default function ForgotPasswordPage() {
             <input
               type="email"
               required
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
               placeholder="you@example.com"
             />

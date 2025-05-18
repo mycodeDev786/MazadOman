@@ -6,6 +6,10 @@ import toast, { Toaster } from "react-hot-toast";
 import Link from "next/link";
 import { assets } from "@/assets/assets"; // your own images
 import Loading from "../components/LoadingSpinner";
+import categories from "../constants/categories";
+import Select from "react-select";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 export default function RegisterPage() {
   const [companyName, setCompanyName] = useState("");
@@ -19,6 +23,20 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedSubcategories, setSelectedSubcategories] = useState([]);
+  const categoryOptions = categories.map((cat) => ({
+    value: cat.id,
+    label: cat.title,
+  }));
+
+  // Flatten all subcategories from all categories
+  const subcategoryOptions = categories.flatMap((cat) =>
+    cat.subcategories.map((sub) => ({
+      value: sub.id,
+      label: `${cat.title} - ${sub.title}`, // shows parent category for context
+    }))
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,6 +56,14 @@ export default function RegisterPage() {
     formData.append("password", password);
     formData.append("logo", logoFile);
     formData.append("cr_file", crFile);
+    formData.append(
+      "categories",
+      JSON.stringify(selectedCategories.map((c) => c.value))
+    );
+    formData.append(
+      "subcategories",
+      JSON.stringify(selectedSubcategories.map((s) => s.value))
+    );
 
     try {
       const response = await fetch(
@@ -99,7 +125,6 @@ export default function RegisterPage() {
               className="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           </div>
-
           {/* Company Name */}
           <div>
             <label className="text-sm font-medium text-gray-700">
@@ -114,7 +139,6 @@ export default function RegisterPage() {
               placeholder="Company Name"
             />
           </div>
-
           {/* Person Name */}
           <div>
             <label className="text-sm font-medium text-gray-700">
@@ -129,22 +153,35 @@ export default function RegisterPage() {
               placeholder="John Doe"
             />
           </div>
-
           {/* Phone Number */}
           <div>
             <label className="text-sm font-medium text-gray-700">
               Phone Number
             </label>
-            <input
-              type="tel"
+            <PhoneInput
+              country={"us"}
+              searchPlaceholder="search"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              enableSearch={true}
+              onChange={(value) => setPhone(value)}
+              containerStyle={{ width: "100%" }}
+              inputStyle={{
+                width: "100%",
+                paddingLeft: "58px", // 👈 Add enough padding to clear the flag
+                paddingTop: "12px",
+                paddingBottom: "12px",
+                borderRadius: "0.5rem",
+                border: "1px solid #d1d5db", // gray-300
+                outline: "none",
+              }}
+              buttonStyle={{
+                borderTopLeftRadius: "0.5rem",
+                borderBottomLeftRadius: "0.5rem",
+                borderRight: "1px solid #d1d5db",
+              }}
               required
-              className="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              placeholder="+1234567890"
             />
           </div>
-
           {/* Email Address */}
           <div>
             <label className="text-sm font-medium text-gray-700">
@@ -159,6 +196,51 @@ export default function RegisterPage() {
               placeholder="you@example.com"
             />
           </div>
+          {/* Category Selection */}
+          <div className="mb-6">
+            <label className="block text-lg font-medium mb-2">
+              Select Categories:
+            </label>
+            <Select
+              isMulti
+              options={categoryOptions}
+              value={selectedCategories}
+              onChange={(selected) => setSelectedCategories(selected || [])}
+              placeholder="Select categories"
+              className="react-select-container"
+              classNamePrefix="react-select"
+            />
+          </div>
+
+          {selectedCategories.length > 0 && (
+            <div className="text-sm text-gray-700 mb-2">
+              <strong>Selected Categories:</strong>{" "}
+              {selectedCategories.map((cat) => cat.label).join(", ")}
+            </div>
+          )}
+
+          {/* Subcategory Selection */}
+          <div className="mb-6">
+            <label className="block text-lg font-medium mb-2">
+              Select Subcategories:
+            </label>
+            <Select
+              isMulti
+              options={subcategoryOptions}
+              value={selectedSubcategories}
+              onChange={(selected) => setSelectedSubcategories(selected || [])}
+              placeholder="Select subcategories"
+              className="react-select-container"
+              classNamePrefix="react-select"
+            />
+          </div>
+
+          {selectedSubcategories.length > 0 && (
+            <div className="text-sm text-gray-700 mb-4">
+              <strong>Selected Subcategories:</strong>{" "}
+              {selectedSubcategories.map((sub) => sub.label).join(", ")}
+            </div>
+          )}
 
           {/* Upload CR */}
           <div>
@@ -172,7 +254,6 @@ export default function RegisterPage() {
               className="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           </div>
-
           {/* Password */}
           <div>
             <label className="text-sm font-medium text-gray-700">
@@ -196,7 +277,6 @@ export default function RegisterPage() {
               </button>
             </div>
           </div>
-
           {/* Confirm Password */}
           <div>
             <label className="text-sm font-medium text-gray-700">
@@ -220,7 +300,6 @@ export default function RegisterPage() {
               </button>
             </div>
           </div>
-
           {/* Terms */}
           <div className="flex items-center">
             <input
@@ -233,7 +312,6 @@ export default function RegisterPage() {
               I agree to the Terms and Conditions
             </label>
           </div>
-
           {/* Submit */}
           <button
             type="submit"
