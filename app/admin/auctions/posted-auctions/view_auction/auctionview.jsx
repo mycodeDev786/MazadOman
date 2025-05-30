@@ -4,6 +4,9 @@ import { Dialog } from "@headlessui/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Loading from "@/app/components/LoadingSpinner";
 import toast, { Toaster } from "react-hot-toast";
+import { useLanguage } from "../../../../components/LanguageContext";
+import { translations } from "../../../../translations/posted_auction_translation";
+import { formatDateWithLan } from "@/app/utils/formatDate";
 
 export default function TenderPage() {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,6 +29,12 @@ export default function TenderPage() {
   const [bid_end_date, setBidEndDate] = useState(null);
   const [existingFiles, setExistingFiles] = useState([]); // Fetched from backend
   const [deletedFileIds, setDeletedFileIds] = useState([]);
+
+  const { language } = useLanguage();
+  const t = translations[language];
+  const alignment = language === "ar" ? "text-right" : "text-left";
+  const isRTL = language === "ar";
+  const isArabic = language === "ar";
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -197,43 +206,43 @@ export default function TenderPage() {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className={`p-6 max-w-6xl mx-auto ${alignment}`}>
       <Loading isLoading={loading} />
       <Toaster position="top-center" reverseOrder={false} />
-      <h1 className="text-2xl font-bold text-center mb-4">
-        Auction Information
+      <h1 className="text-2xl font-bold text-orange-400 text-center mb-4">
+        {t.auctionInformation}
       </h1>
       {/* TENDER INFO CARD */}
       <div className="flex items-start justify-between bg-gray-100 p-4  rounded-md mb-6">
         <div>
           <h2 className="text-xl font-bold">
-            <span>Auction Id: </span>
+            <span>{t.auctionId}: </span>
             {tender?.auction_id}
           </h2>
           <p className="text-gray-700 py-2 ">
             {" "}
-            <span>Auction Title: </span> {tender?.title}
+            <span>{t.auctionTitle}: </span> {tender?.title}
           </p>
           <p className=" py-2v font-semibold text-orange-700 ">
             {" "}
-            <span className=" text-gray-700">Auction Type: </span>{" "}
+            <span className=" text-gray-700">{t.auctionType}: </span>{" "}
             {tender?.auction_type}
           </p>
           <p className="text-gray-700 py-2 ">
             {" "}
-            <span>Auction Description: </span>
+            <span>{t.auctionDescription}: </span>
             {tender?.description}
           </p>
-          <p className="text-sm text-gray-500 mt-1">
-            <span className="font-bold text-amber-700">Deadline: </span>{" "}
-            {tender?.bid_end_date}
+          <p className="text-sm font-semibold text-gray-500 mt-1">
+            <span className="font-bold text-amber-700">{t.deadline}: </span>{" "}
+            {formatDateWithLan(tender?.bid_end_date, language)}
           </p>
         </div>
         <button
           onClick={openModal}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
-          Edit
+          {t.edit}
         </button>
       </div>
 
@@ -245,14 +254,26 @@ export default function TenderPage() {
       >
         <Loading isLoading={loading} />
         <div className="fixed inset-0 bg-black/30 " aria-hidden="true" />
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="bg-white rounded max-w-md w-full max-h-[90vh] overflow-y-auto p-6 shadow-xl">
-            <Dialog.Title className="text-lg font-bold mb-4">
-              Edit Tender Info
+        <div
+          className={`fixed inset-0 flex items-center justify-center p-4 ${
+            isRTL ? "flex-row-reverse" : ""
+          }`}
+          dir={isRTL ? "rtl" : "ltr"}
+        >
+          <Dialog.Panel
+            className={`bg-white rounded max-w-md w-full max-h-[90vh] overflow-y-auto p-6 shadow-xl ${
+              isRTL ? "text-right rtl" : "text-left"
+            }`}
+          >
+            <Dialog.Title
+              dir={isRTL ? "rtl" : "ltr"}
+              className={`text-lg font-bold mb-4 `}
+            >
+              {t.editTender}
             </Dialog.Title>
             <div className="space-y-4">
               <div>
-                <label className="block font-medium">Title</label>
+                <label className="block font-medium">{t.title}</label>
                 <input
                   name="title"
                   value={editTender?.title}
@@ -261,7 +282,7 @@ export default function TenderPage() {
                 />
               </div>
               <div>
-                <label className="block font-medium">Description</label>
+                <label className="block font-medium">{t.description}</label>
                 <textarea
                   name="description"
                   value={editTender?.description}
@@ -270,7 +291,7 @@ export default function TenderPage() {
                 />
               </div>
               <div>
-                <label className="block font-medium">Deadline</label>
+                <label className="block font-medium">{t.deadline}</label>
                 <input
                   type="date"
                   name="deadline"
@@ -286,7 +307,7 @@ export default function TenderPage() {
                   htmlFor="additional_documents"
                   className="block font-medium  mb-2"
                 >
-                  Edit additional documents:
+                  {t.editAdditionalDocs}
                 </label>
 
                 <input
@@ -300,7 +321,7 @@ export default function TenderPage() {
                 {existingFiles?.length > 0 && (
                   <div className="mt-4">
                     <p className="text-sm font-semibold mb-1">
-                      Previously uploaded:
+                      {t.previouslyUploaded}
                     </p>
                     <ul className="space-y-1 text-sm text-gray-700">
                       {existingFiles.map((file) => (
@@ -313,7 +334,7 @@ export default function TenderPage() {
                             onClick={() => handleRemoveExistingFile(file.id)}
                             className="text-red-600 hover:underline text-xs"
                           >
-                            Remove
+                            {t.remove}
                           </button>
                         </li>
                       ))}
@@ -327,13 +348,13 @@ export default function TenderPage() {
                   onClick={() => setIsOpen(false)}
                   className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
                 >
-                  Cancel
+                  {t.cancel}
                 </button>
                 <button
                   onClick={submitEdit}
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
-                  Save
+                  {t.save}
                 </button>
               </div>
             </div>
@@ -342,19 +363,18 @@ export default function TenderPage() {
       </Dialog>
 
       {quotes.length === 0 ? (
-        <p className="text-gray-500 p-6 mt-10">No one Place Bid yet.</p>
+        <p className="text-gray-500 p-6 mt-10">{t.noBid}</p>
       ) : (
         <>
-          <h2 className="text-xl font-semibold mt-10 mb-2">Tender Quotes</h2>
+          <h2 className="text-xl font-semibold mt-10 mb-2">{t.tenderQuotes}</h2>
           <table className="w-full border border-gray-300">
             <thead className="bg-gray-100">
               <tr>
-                <th className="p-2 border"> No</th>
-                <th className="p-2 border">Company Name</th>
-                <th className="p-2 border">Profile</th>
-                <th className="p-2 border">Bid Offer</th>
-
-                <th className="p-2 border">Download Offer</th>
+                <th className="p-2 border text-center">{t.no}</th>
+                <th className="p-2 border text-center">{t.companyName}</th>
+                <th className="p-2 border text-center">{t.profile}</th>
+                <th className="p-2 border text-center">{t.bidOffer}</th>
+                <th className="p-2 border text-center">{t.downloadOffer}</th>
               </tr>
             </thead>
             <tbody>
@@ -373,10 +393,12 @@ export default function TenderPage() {
                       }}
                       className="text-blue-600 cursor-pointer underline"
                     >
-                      Profile
+                      {t.profile}
                     </div>
                   </td>
-                  <td className="p-2 border">{comp.bid_amount} OMR</td>
+                  <td className="p-2 border">
+                    {comp.bid_amount} {t.currency}
+                  </td>
 
                   <td className="p-2 border">
                     <a
@@ -384,7 +406,7 @@ export default function TenderPage() {
                       className="text-red-600 underline"
                       download
                     >
-                      Download
+                      {t.downloadOffer}
                     </a>
                   </td>
                 </tr>
@@ -395,133 +417,28 @@ export default function TenderPage() {
       )}
 
       {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg overflow-auto max-h-screen">
-            <h2 className="text-xl font-bold mb-4">Add Bid Details</h2>
-            <form className="space-y-4">
-              {/* Tender Field */}
-              <div>
-                <label className="block font-medium mb-1">
-                  Selected Tender:
-                </label>
-                <input
-                  type="text"
-                  name="tender"
-                  value={tender?.tender_id + tender.title}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter tender name"
-                />
-              </div>
-
-              {/* Bidders Field */}
-              <div>
-                <label className="block font-medium mb-1">
-                  Selected Bidders (IDs):
-                </label>
-                <input
-                  type="text"
-                  name="bidders"
-                  value={selectedBidders.join(", ")}
-                  readOnly
-                  className="w-full border border-gray-300 p-2 rounded bg-gray-100"
-                />
-              </div>
-
-              {/* Bidding Price */}
-              <div>
-                <label className="block font-medium mb-1">
-                  Bidding Price Starting:
-                </label>
-                <input
-                  type="number"
-                  name="biddingPrice"
-                  value={bidding_price}
-                  onChange={(e) => setBiddingPrice(e.target.value)}
-                  className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter starting price"
-                />
-              </div>
-
-              {/* Date Field */}
-              <div>
-                <label className="block font-medium mb-1">Date:</label>
-                <input
-                  type="date"
-                  name="date"
-                  value={bid_start_date}
-                  onChange={(e) => setBidStartDate(e.target.value)}
-                  className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* Start Time */}
-              <div>
-                <label className="block font-medium mb-1">
-                  Bidding Time Start:
-                </label>
-                <input
-                  type="time"
-                  name="startTime"
-                  value={bid_start_time}
-                  onChange={(e) => setBidStartTime(e.target.value)}
-                  className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* End Time */}
-              <div>
-                <label className="block font-medium mb-1">
-                  Bidding Time End:
-                </label>
-                <input
-                  type="time"
-                  name="endTime"
-                  value={bid_end_time}
-                  onChange={(e) => setBidEndTime(e.target.value)}
-                  className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* Countdown Time */}
-              <div>
-                <label className="block font-medium mb-1">
-                  Bidding Countdown Time (max 10 mins):
-                </label>
-                <input
-                  type="number"
-                  name="countdownTime"
-                  value={bid_countDown_time}
-                  onChange={(e) => SetBidCountDownTime(e.target.value)}
-                  className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Maximum 10 mins"
-                  min="1"
-                  max="10"
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex justify-end space-x-2 mt-4">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                >
-                  Submit
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* ADD BID DETAILS BUTTON */}
+      <div
+        className={`mt-10 flex ${
+          isArabic ? "flex-row-reverse" : "flex-row"
+        } justify-center`}
+        dir={isArabic ? "rtl" : "ltr"}
+      >
+        <button
+          onClick={() => {
+            router.push(
+              `/admin/promotion_page?id=${encodeURIComponent(
+                tender?.auction_id
+              )}&type=${encodeURIComponent(tender.auction_type)}`
+            );
+          }}
+          className={`bg-fuchsia-500 cursor-pointer ${
+            isArabic ? "mr-4" : "ml-4"
+          } text-white px-6 py-3 rounded shadow-lg hover:bg-fuchsia-600 min-w-[150px] text-center`}
+        >
+          {t.promote_auction}
+        </button>
+      </div>
     </div>
   );
 }

@@ -4,6 +4,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Loading from "@/app/components/LoadingSpinner";
 import { useSelector } from "react-redux";
+import { useLanguage } from "../../components/LanguageContext";
+import { translations } from "../../translations/quoted_translation";
 
 export default function TenderPage() {
   const searchParams = useSearchParams();
@@ -19,6 +21,11 @@ export default function TenderPage() {
   const [technicalOffer, setTechnicalOffer] = useState(null);
   const [commercialOffer, setCommercialOffer] = useState(null);
   const [totalOffer, setTotalOffer] = useState(null);
+
+  const { language } = useLanguage();
+  const t = translations[language];
+
+  const isRTL = language === "ar";
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files); // convert FileList to array
@@ -113,29 +120,31 @@ export default function TenderPage() {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className={`p-6 max-w-6xl mx-auto`} dir={isRTL ? "rtl" : "ltr"}>
       <Loading isLoading={loading} />
       <h1 className="text-2xl font-bold text-center mb-4">
-        Quoted Tender Information
+        {t.quotedTenderInfo}
       </h1>
       <div className="flex justify-between">
         {/* Tender Info */}
         <div className="space-y-4 flex-1 pl-6">
           <div className="flex items-center space-x-2">
-            <span className="text-gray-500">Tender Id:</span>
+            <span className="text-gray-500">{t.tenderId}:</span>
             <p className="text-amber-700 m-0">{tender?.tender_id}</p>
           </div>
           <div className="flex items-center space-x-2">
-            <span className="text-gray-500">Tender title:</span>
+            <span className="text-gray-500">{t.tenderTitle}:</span>
             <p className="text-amber-700 m-0">{tender?.tender_title}</p>
           </div>
           <div className="flex items-center space-x-2">
-            <span className="text-gray-500">Total offer:</span>
-            <p className="text-amber-700 m-0">{tender?.quote_amount} OMR</p>
+            <span className="text-gray-500">{t.totalOffer}:</span>
+            <p className="text-amber-700 m-0">
+              {tender?.quote_amount} {t.currency}
+            </p>
           </div>
 
           <div>
-            <span className="text-gray-500">Status:</span>{" "}
+            <span className="text-gray-500">{t.status}:</span>{" "}
             <span
               className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-semibold rounded-full ${(() => {
                 const status = tender?.status?.toLowerCase();
@@ -170,28 +179,28 @@ export default function TenderPage() {
           </div>
 
           <div>
-            <span className="text-gray-500">Technical Offer:</span>{" "}
+            <span className="text-gray-500">{t.technicalOffer}:</span>{" "}
             <a
               href={`https://mazadoman.com/backend/${tender?.technical_offer}`}
               className="text-blue-600 hover:underline"
               download
             >
-              Download
+              {t.download}
             </a>
           </div>
 
           <div>
-            <span className="text-gray-500">Commercial Offer:</span>{" "}
+            <span className="text-gray-500">{t.commercialOffer}:</span>{" "}
             <a
               href={`https://mazadoman.com/backend/${tender?.commercial_offer}`}
               className="text-blue-600 hover:underline"
               download
             >
-              Download
+              {t.download}
             </a>
           </div>
           <div>
-            <span className="text-gray-500">Additional Files:</span>
+            <span className="text-gray-500">{t.additionalFiles}:</span>
             <div className="ml-2 mt-1 space-y-1">
               {tender?.additional_files?.length > 0 ? (
                 tender.additional_files.map((file, index) => (
@@ -206,13 +215,13 @@ export default function TenderPage() {
                   </div>
                 ))
               ) : (
-                <span className="text-gray-400">No additional files</span>
+                <span className="text-gray-400">{t.noAdditionalFiles}</span>
               )}
             </div>
           </div>
 
           <div>
-            <span className="text-gray-500">Date & Time for Bidding:</span>{" "}
+            <span className="text-gray-500">{t.biddingDate}:</span>{" "}
             <span className="font-semibold">{tender?.biddingDate}</span>
           </div>
 
@@ -221,7 +230,7 @@ export default function TenderPage() {
               href="#"
               className="inline-block mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
             >
-              Enter to Online Bidding
+              {t.enterOnlineBidding}
             </Link>
           )}
         </div>
@@ -231,13 +240,13 @@ export default function TenderPage() {
             className="bg-yellow-500 text-white px-4 py-2 rounded"
             onClick={() => setShowEditModal(true)}
           >
-            ✏️ Edit
+            ✏️ {t.edit}
           </button>
           <button
             className="bg-green-600 text-white px-4 py-2 rounded"
             onClick={() => setShowResubmitModal(true)}
           >
-            📤 Resubmit the Quotation
+            📤{t.resubmitQuotation}
           </button>
         </div>
       </div>
@@ -247,7 +256,7 @@ export default function TenderPage() {
           <div className="bg-white rounded-lg shadow-md p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <Loading isLoading={loading} />
             <h2 className="text-xl font-semibold mb-4">
-              {showEditModal ? "Edit Quotation" : "Resubmit Quotation"}
+              {showEditModal ? t.editQuotation : t.resubmitQuotation}
             </h2>
 
             <form
@@ -258,7 +267,7 @@ export default function TenderPage() {
             >
               <div className="mb-4">
                 <label className="block text-gray-700">
-                  Quoted Amount (OMR):
+                  {t.quotedAmount} ({t.currency}):
                 </label>
                 <input
                   type="number"
@@ -272,28 +281,46 @@ export default function TenderPage() {
 
               <div className="mb-4">
                 <label className="block text-gray-700">
-                  Technical Offer (PDF):
+                  {t.technicalOffer} ({t.pdf}):
                 </label>
-                <input
-                  type="file"
-                  name="technical_offer"
-                  accept=".pdf"
-                  onChange={(e) => setTechnicalOffer(e.target.value)}
-                  className="w-full border p-1.5 mt-1"
-                />
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="technical_offer"
+                    name="technical_offer"
+                    accept=".pdf"
+                    onChange={(e) => setTechnicalOffer(e.target.files[0])}
+                    className="w-full border p-1.5 mt-1 opacity-0 absolute z-10"
+                  />
+                  <label
+                    htmlFor="technical_offer"
+                    className="block w-full border p-1.5 mt-1 cursor-pointer bg-white text-gray-700"
+                  >
+                    {technicalOffer ? technicalOffer.name : t.noFileChosen}
+                  </label>
+                </div>
               </div>
 
               <div className="mb-4">
                 <label className="block text-gray-700">
-                  Commercial Offer (PDF):
+                  {t.commercialOffer} ({t.pdf}):
                 </label>
-                <input
-                  type="file"
-                  name="commercial_offer"
-                  accept=".pdf"
-                  onChange={(e) => setCommercialOffer(e.target.value)}
-                  className="w-full border p-1.5 mt-1"
-                />
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="commercial_offer"
+                    name="commercial_offer"
+                    accept=".pdf"
+                    onChange={(e) => setCommercialOffer(e.target.files[0])}
+                    className="w-full border p-1.5 mt-1 opacity-0 absolute z-10"
+                  />
+                  <label
+                    htmlFor="commercial_offer"
+                    className="block w-full border p-1.5 mt-1 cursor-pointer bg-white text-gray-700"
+                  >
+                    {commercialOffer ? commercialOffer.name : t.noFileChosen}
+                  </label>
+                </div>
               </div>
 
               {/* Tender additional */}
@@ -302,7 +329,7 @@ export default function TenderPage() {
                   htmlFor="additional_documents"
                   className="block text-lg font-medium mb-2"
                 >
-                  Edit additional documents:
+                  {t.editAdditionalDocs}
                 </label>
 
                 <input
@@ -322,7 +349,11 @@ export default function TenderPage() {
                 )}
               </div>
 
-              <div className="flex justify-end space-x-2 mt-4">
+              <div
+                className={`flex ${
+                  isRTL ? "justify-start" : "justify-end"
+                } space-x-2 mt-4`}
+              >
                 <button
                   type="button"
                   className="bg-gray-300 px-4 py-2 rounded"
@@ -331,13 +362,13 @@ export default function TenderPage() {
                     setShowResubmitModal(false);
                   }}
                 >
-                  Cancel
+                  {t.cancel}
                 </button>
                 <button
                   type="submit"
                   className="bg-blue-600 text-white px-4 py-2 rounded"
                 >
-                  Submit
+                  {t.submit}
                 </button>
               </div>
             </form>

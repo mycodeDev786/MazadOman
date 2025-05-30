@@ -1,10 +1,20 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+// Helper function to safely parse JSON
+const safeParseJSON = (value) => {
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    console.error("Error parsing JSON:", error);
+    return null;
+  }
+};
+
 // Initialize state from localStorage if available
 const initialState = {
   user:
     typeof window !== "undefined"
-      ? JSON.parse(localStorage.getItem("user")) || null
+      ? safeParseJSON(localStorage.getItem("user")) || null
       : null, // Fetch user from localStorage
   token:
     typeof window !== "undefined"

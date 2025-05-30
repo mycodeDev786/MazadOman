@@ -4,6 +4,9 @@ import { Dialog } from "@headlessui/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Loading from "@/app/components/LoadingSpinner";
 import toast, { Toaster } from "react-hot-toast";
+import { useLanguage } from "../../../components/LanguageContext";
+import { translations } from "../../../translations/translation";
+import { formatDateWithLan } from "@/app/utils/formatDate";
 
 export default function TenderPage() {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,6 +28,10 @@ export default function TenderPage() {
   const [boq, setBoq] = useState(null);
   const [existingFiles, setExistingFiles] = useState([]); // Fetched from backend
   const [deletedFileIds, setDeletedFileIds] = useState([]);
+
+  const { language } = useLanguage();
+  const t = translations[language];
+  const isArabic = language === "ar";
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -244,38 +251,38 @@ export default function TenderPage() {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div dir={isArabic ? "rtl" : "ltr"} className="p-6 max-w-6xl mx-auto">
       <Loading isLoading={loading} />
       <Toaster position="top-center" reverseOrder={false} />
       <h1 className="text-2xl font-bold text-center mb-4">
-        Tender Information
+        {t.tender_information}
       </h1>
       {/* TENDER INFO CARD */}
       <div className="flex items-start justify-between bg-gray-100 p-4  rounded-md mb-6">
         <div>
           <h2 className="text-xl font-bold">
-            <span>Tender Id: </span>
+            <span>{t.tender_id}: </span>
             {tender?.tender_id}
           </h2>
           <p className="text-gray-700 py-2 ">
             {" "}
-            <span>Tender Title: </span> {tender?.title}
+            <span>{t.tender_title}: </span> {tender?.title}
           </p>
           <p className="text-gray-700 py-2 ">
             {" "}
-            <span>Tender Description: </span> {tender?.title}{" "}
+            <span>{t.tender_description}: </span> {tender?.title}{" "}
             {tender?.description}
           </p>
           <p className="text-sm text-gray-500 mt-1">
-            <span className="font-bold text-amber-700">Deadline: </span>{" "}
-            {tender?.bid_end_date}
+            <span className="font-bold text-amber-700">{t.deadline}: </span>{" "}
+            {formatDateWithLan(tender?.bid_end_date, language)}
           </p>
         </div>
         <button
           onClick={openModal}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
-          Edit
+          {t.edit}
         </button>
       </div>
 
@@ -287,14 +294,23 @@ export default function TenderPage() {
       >
         <Loading isLoading={loading} />
         <div className="fixed inset-0 bg-black/30 " aria-hidden="true" />
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="bg-white rounded max-w-md w-full max-h-[90vh] overflow-y-auto p-6 shadow-xl">
+        <div
+          className={`fixed inset-0 flex items-center justify-center p-4 ${
+            isArabic ? "flex-row-reverse" : ""
+          }`}
+          dir={isArabic ? "rtl" : "ltr"}
+        >
+          <Dialog.Panel
+            className={`bg-white rounded max-w-md w-full max-h-[90vh] overflow-y-auto p-6 shadow-xl ${
+              isArabic ? "text-right rtl" : "text-left"
+            }`}
+          >
             <Dialog.Title className="text-lg font-bold mb-4">
-              Edit Tender Info
+              {t.editTenderInfo}
             </Dialog.Title>
             <div className="space-y-4">
               <div>
-                <label className="block font-medium">Title</label>
+                <label className="block font-medium">{t.title}</label>
                 <input
                   name="title"
                   value={editTender?.title}
@@ -303,7 +319,7 @@ export default function TenderPage() {
                 />
               </div>
               <div>
-                <label className="block font-medium">Description</label>
+                <label className="block font-medium">{t.description}</label>
                 <textarea
                   name="description"
                   value={editTender?.description}
@@ -312,7 +328,7 @@ export default function TenderPage() {
                 />
               </div>
               <div>
-                <label className="block font-medium">Deadline</label>
+                <label className="block font-medium">{t.deadline}</label>
                 <input
                   type="date"
                   name="deadline"
@@ -325,7 +341,7 @@ export default function TenderPage() {
               {/* Tender Scope */}
               <div>
                 <label htmlFor="image" className="block font-medium">
-                  Edit Scope of Work:
+                  {t.editScopeOfWork}
                 </label>
 
                 <input
@@ -338,7 +354,7 @@ export default function TenderPage() {
               {/* Tender BOQ */}
               <div>
                 <label htmlFor="image" className="block font-medium mb-2">
-                  Edit the BOQ:
+                  {t.editScopeOfWork}
                 </label>
                 <input
                   type="file"
@@ -354,7 +370,7 @@ export default function TenderPage() {
                   htmlFor="additional_documents"
                   className="block font-medium  mb-2"
                 >
-                  Edit additional documents:
+                  {t.editAdditionalDocuments}
                 </label>
 
                 <input
@@ -368,7 +384,7 @@ export default function TenderPage() {
                 {existingFiles?.length > 0 && (
                   <div className="mt-4">
                     <p className="text-sm font-semibold mb-1">
-                      Previously uploaded:
+                      {t.previouslyUploaded}:
                     </p>
                     <ul className="space-y-1 text-sm text-gray-700">
                       {existingFiles.map((file) => (
@@ -381,7 +397,7 @@ export default function TenderPage() {
                             onClick={() => handleRemoveExistingFile(file.id)}
                             className="text-red-600 hover:underline text-xs"
                           >
-                            Remove
+                            {t.remove}
                           </button>
                         </li>
                       ))}
@@ -395,13 +411,13 @@ export default function TenderPage() {
                   onClick={() => setIsOpen(false)}
                   className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
                 >
-                  Cancel
+                  {t.cancel}
                 </button>
                 <button
                   onClick={submitEdit}
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
-                  Save
+                  {t.save}
                 </button>
               </div>
             </div>
@@ -410,21 +426,25 @@ export default function TenderPage() {
       </Dialog>
 
       {quotes.length === 0 ? (
-        <p className="text-gray-500 p-6 mt-10">No one quoted yet.</p>
+        <p className="text-purple-500 font-semibold text-center p-6 mt-10">
+          {t.no_one_quoted}
+        </p>
       ) : (
         <>
-          <h2 className="text-xl font-semibold mt-10 mb-2">Tender Quotes</h2>
+          <h2 className="text-xl font-semibold mt-10 mb-2">
+            {t.tender_quotes}
+          </h2>
           <table className="w-full border border-gray-300">
             <thead className="bg-gray-100">
               <tr>
-                <th className="p-2 border">Select Company</th>
-                <th className="p-2 border">Company Name</th>
-                <th className="p-2 border">Profile</th>
-                <th className="p-2 border">Total Offer</th>
-                <th className="p-2 border">Action</th>
-                <th className="p-2 border">Download Technical</th>
-                <th className="p-2 border">Download Commercial</th>
-                <th className="p-2 border"> Update Status</th>
+                <th className="p-2 border">{t.select_company}</th>
+                <th className="p-2 border">{t.company_name}</th>
+                <th className="p-2 border">{t.profile}</th>
+                <th className="p-2 border">{t.total_offer}</th>
+                <th className="p-2 border">{t.action}</th>
+                <th className="p-2 border">{t.download_technical}</th>
+                <th className="p-2 border">{t.download_commercial}</th>
+                <th className="p-2 border">{t.update_status}</th>
               </tr>
             </thead>
             <tbody>
@@ -457,29 +477,33 @@ export default function TenderPage() {
                       }}
                       className="text-blue-600 cursor-pointer underline"
                     >
-                      Profile
+                      {t.profile}
                     </div>
                   </td>
-                  <td className="p-2 border">{comp.quote_amount} OMR</td>
+                  <td className="p-2 border">
+                    {comp.quote_amount} {t.currency}
+                  </td>
                   <td className="p-2 border">
                     <select
                       value={quote_status}
                       onChange={(e) => setQuoteStatus(e.target.value)}
                       className="border p-1 rounded"
                     >
-                      <option value="">-- Select --</option>
-                      <option value="approve">Approve</option>
-                      <option value="reject">Reject</option>
+                      <option value="">{t.select_option}</option>
+                      <option value="approve">{t.approve}</option>
+                      <option value="reject">{t.reject}</option>
                       <option value="Submit technical offer">
-                        Submit technical Offer
+                        {t.submit_technical_offer}
                       </option>
                       <option value="resubmit the commtial offer.">
-                        Resubmit the commtial offer.
+                        {t.resubmit_commercial_offer}
                       </option>
-                      <option value="postpond">Postpond</option>
-                      <option value="tender canceled">Tender Canceled</option>
-                      <option value="Cancelled">Cancelled</option>
-                      <option value="Award the job">Award the Job</option>
+                      <option value="postpond">{t.postpond}</option>
+                      <option value="tender canceled">
+                        {t.tender_canceled}
+                      </option>
+                      <option value="Cancelled">{t.cancelled}</option>
+                      <option value="Award the job">{t.award_the_job}</option>
                     </select>
                   </td>
                   <td className="p-2 border">
@@ -488,7 +512,7 @@ export default function TenderPage() {
                       className="text-green-600 underline"
                       download
                     >
-                      Download
+                      {t.download}
                     </a>
                   </td>
                   <td className="p-2 border">
@@ -497,7 +521,7 @@ export default function TenderPage() {
                       className="text-red-600 underline"
                       download
                     >
-                      Download
+                      {t.download}
                     </a>
                   </td>
                   <td className="p-2 border">
@@ -505,7 +529,7 @@ export default function TenderPage() {
                       onClick={() => handleUpdateStatus(comp.quote_id)}
                       className="bg-amber-500 rounded-sm text-white cursor-pointer p-1.5"
                     >
-                      Update
+                      {t.update}
                     </button>
                   </td>
                 </tr>
@@ -515,12 +539,17 @@ export default function TenderPage() {
         </>
       )}
       {/* ADD BID DETAILS BUTTON */}
-      <div className="mt-10 justify-evenly">
+      <div
+        className={`mt-10 flex ${
+          isArabic ? "flex-row-reverse" : "flex-row"
+        } justify-center`}
+        dir={isArabic ? "rtl" : "ltr"}
+      >
         <button
           onClick={() => setIsModalOpen(true)}
           className="bg-orange-500 cursor-pointer text-white px-4 py-2 rounded shadow-lg hover:bg-orange-600"
         >
-          Add Bid Details
+          {t.add_bid_details}
         </button>
 
         <button
@@ -529,26 +558,44 @@ export default function TenderPage() {
               `/admin/view_result?id=${encodeURIComponent(tender?.tender_id)}`
             );
           }}
-          className="bg-purple-500 cursor-pointer ml-4 text-white px-4 py-2 rounded shadow-lg hover:bg-purple-600"
+          className={`bg-purple-500 cursor-pointer ${
+            isArabic ? "mr-4" : "ml-4"
+          } text-white px-4 py-2 rounded shadow-lg hover:bg-purple-600`}
         >
-          View Bid Result
+          {t.view_bid_result}
+        </button>
+        <button
+          onClick={() => {
+            router.push(
+              `/admin/promotion_page?id=${encodeURIComponent(
+                tender?.tender_id
+              )}&type=${encodeURIComponent("Tender")}`
+            );
+          }}
+          className={`bg-fuchsia-500 cursor-pointer ${
+            isArabic ? "mr-4" : "ml-4"
+          } text-white px-4 py-2 rounded shadow-lg hover:bg-fuchsia-600`}
+        >
+          {t.promote_tender}
         </button>
       </div>
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg overflow-auto max-h-screen">
-            <h2 className="text-xl font-bold mb-4">Add Bid Details</h2>
+            <h2 className="text-xl text-fuchsia-600 font-bold mb-4">
+              {t.addBidDetails}
+            </h2>
             <form className="space-y-4">
               {/* Tender Field */}
               <div>
                 <label className="block font-medium mb-1">
-                  Selected Tender:
+                  {t.selectedTender}
                 </label>
                 <input
                   type="text"
                   name="tender"
-                  value={tender?.tender_id + tender.title}
+                  value={tender?.tender_id + "," + tender.title}
                   onChange={handleChange}
                   className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter tender name"
@@ -558,7 +605,7 @@ export default function TenderPage() {
               {/* Bidders Field */}
               <div>
                 <label className="block font-medium mb-1">
-                  Selected Bidders (IDs):
+                  {t.selectedBidders}
                 </label>
                 <input
                   type="text"
@@ -572,7 +619,7 @@ export default function TenderPage() {
               {/* Bidding Price */}
               <div>
                 <label className="block font-medium mb-1">
-                  Bidding Price Starting:
+                  {t.biddingPriceStart}
                 </label>
                 <input
                   type="number"
@@ -580,13 +627,13 @@ export default function TenderPage() {
                   value={bidding_price}
                   onChange={(e) => setBiddingPrice(e.target.value)}
                   className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter starting price"
+                  placeholder={t.enterStartingPrice}
                 />
               </div>
 
               {/* Date Field */}
               <div>
-                <label className="block font-medium mb-1">Date:</label>
+                <label className="block font-medium mb-1">{t.date}</label>
                 <input
                   type="date"
                   name="date"
@@ -599,7 +646,7 @@ export default function TenderPage() {
               {/* Start Time */}
               <div>
                 <label className="block font-medium mb-1">
-                  Bidding Time Start:
+                  {t.biddingTimeStart}
                 </label>
                 <input
                   type="time"
@@ -613,7 +660,7 @@ export default function TenderPage() {
               {/* End Time */}
               <div>
                 <label className="block font-medium mb-1">
-                  Bidding Time End:
+                  {t.biddingTimeEnd}
                 </label>
                 <input
                   type="time"
@@ -627,7 +674,7 @@ export default function TenderPage() {
               {/* Countdown Time */}
               <div>
                 <label className="block font-medium mb-1">
-                  Bidding Countdown Time (max 10 mins):
+                  {t.countdownTime}
                 </label>
                 <input
                   type="number"
@@ -635,27 +682,31 @@ export default function TenderPage() {
                   value={bid_countDown_time}
                   onChange={(e) => SetBidCountDownTime(e.target.value)}
                   className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Maximum 10 mins"
+                  placeholder={t.maxTenMins}
                   min="1"
                   max="10"
                 />
               </div>
 
               {/* Action Buttons */}
-              <div className="flex justify-end space-x-2 mt-4">
+              <div
+                className={`flex ${
+                  language === "ar" ? "justify-start" : "justify-end"
+                } space-x-2 mt-4`}
+              >
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
                 >
-                  Cancel
+                  {t.cancel}
                 </button>
                 <button
                   type="button"
                   onClick={handleSubmit}
                   className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                 >
-                  Submit
+                  {t.submit}
                 </button>
               </div>
             </form>

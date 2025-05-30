@@ -1,6 +1,12 @@
+"use client";
+import { useLanguage } from "./LanguageContext";
+import { translations } from "../translations/translation";
 import { assets } from "@/assets/assets";
 
 export default function Footer() {
+  const { language } = useLanguage();
+  const t = translations[language];
+
   return (
     <footer
       className="text-gray-100 text-sm bg-cover bg-center bg-no-repeat"
@@ -14,17 +20,17 @@ export default function Footer() {
           {/* About Section */}
           <div>
             <h4 className="text-lg font-semibold mb-4 uppercase tracking-wider text-white">
-              About MazadOman
+              {t.footer.about.title}
             </h4>
             <ul className="space-y-2">
               <li>
                 <a href="#" className="hover:text-blue-400 transition">
-                  About MazadOman
+                  {t.footer.about.links.about}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-blue-400 transition">
-                  Our Services
+                  {t.footer.about.links.services}
                 </a>
               </li>
             </ul>
@@ -33,27 +39,27 @@ export default function Footer() {
           {/* Support Section */}
           <div>
             <h4 className="text-lg font-semibold mb-4 uppercase tracking-wider text-white">
-              Support
+              {t.footer.support.title}
             </h4>
             <ul className="space-y-2">
               <li>
                 <a href="#" className="hover:text-blue-400 transition">
-                  Contact Us
+                  {t.footer.support.links.contact}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-blue-400 transition">
-                  Terms & Conditions
+                  {t.footer.support.links.terms}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-blue-400 transition">
-                  Privacy Policy
+                  {t.footer.support.links.privacy}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-blue-400 transition">
-                  FAQs
+                  {t.footer.support.links.faqs}
                 </a>
               </li>
             </ul>
@@ -62,53 +68,26 @@ export default function Footer() {
           {/* Categories Section */}
           <div>
             <h4 className="text-lg font-semibold mb-4 uppercase tracking-wider text-white">
-              Categories
+              {t.footer.categories.title}
             </h4>
             <ul className="space-y-2">
-              <li>
-                <a href="#" className="hover:text-blue-400 transition">
-                  Electronics
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-blue-400 transition">
-                  Home Appliances
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-blue-400 transition">
-                  Furniture
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-blue-400 transition">
-                  Fashion
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-blue-400 transition">
-                  Vehicles
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-blue-400 transition">
-                  Real Estate
-                </a>
-              </li>
+              {t.footer.categories.items.map((item, idx) => (
+                <li key={idx}>
+                  <a href="#" className="hover:text-blue-400 transition">
+                    {item}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* Socials Section */}
           <div>
             <h4 className="text-lg font-semibold mb-4 uppercase tracking-wider text-white">
-              Get In Touch
+              {t.footer.socials.title}
             </h4>
             <div className="flex space-x-4">
-              {[
-                { icon: "fab fa-facebook-f", link: "#" },
-                { icon: "fab fa-twitter", link: "#" },
-                { icon: "fab fa-youtube", link: "#" },
-              ].map(({ icon, link }, idx) => (
+              {t.footer.socials.links.map(({ icon, link }, idx) => (
                 <a
                   key={idx}
                   href={link}
@@ -123,18 +102,17 @@ export default function Footer() {
 
         {/* Company Info */}
         <div className="max-w-7xl mx-auto px-4 pb-8 text-sm">
-          <h4 className="text-white font-semibold mb-2">MazadOman </h4>
+          <h4 className="text-white font-semibold mb-2">
+            {t.footer.company.name}
+          </h4>
           <p className="text-gray-300 leading-relaxed">
-            MazadOman is a leading auction platform in Oman, providing a wide
-            range of auction and purchase services. With a strong focus on
-            innovation and trust, we ensure a secure bidding environment for all
-            users.
+            {t.footer.company.description}
           </p>
         </div>
 
         {/* Bottom Bar */}
         <div className="border-t border-gray-600 text-center text-xs text-orange-400 py-4">
-          © {new Date().getFullYear()} MazadOman™ — All Rights Reserved.
+          {t.footer.bottomBar}
         </div>
       </div>
     </footer>

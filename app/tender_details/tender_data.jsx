@@ -5,9 +5,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Loading from "../components/LoadingSpinner";
-import { formatDate } from "../utils/formatDate";
+import { formatDate, formatDateWithLan } from "../utils/formatDate";
 import { useSelector } from "react-redux";
 import toast, { Toaster } from "react-hot-toast";
+
+import { useLanguage } from "../components/LanguageContext";
+import { translations } from "../translations/translation";
 
 export default function TenderDetails() {
   const router = useRouter();
@@ -22,6 +25,10 @@ export default function TenderDetails() {
   const [totalOffer, setTotalOffer] = useState(0);
   const user = useSelector((state) => state.session.user);
   const [additionalFiles, setAdditionalFiles] = useState([]);
+
+  const { language } = useLanguage();
+  const t = translations[language];
+  const isRTL = language === "ar";
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files); // convert FileList to array
@@ -55,18 +62,18 @@ export default function TenderDetails() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     setIsLoggedIn(!!token);
-  }, []);
+  }, [isLoggedIn]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!technicalOffer || !commercialOffer) {
-      setError("Please upload both technical and commercial offers.");
+      setError(t.uploadBothOffers);
       return;
     }
 
     if (!totalOffer || isNaN(totalOffer)) {
-      setError("Please enter a valid total offer.");
+      setError(t.invalidTotalOffer);
       return;
     }
 
@@ -78,7 +85,7 @@ export default function TenderDetails() {
       // Assume you store userId after login
 
       if (!token || !user?.id) {
-        setError("User authentication error. Please log in again.");
+        setError(t.authError);
         return;
       }
 
@@ -107,7 +114,7 @@ export default function TenderDetails() {
         throw new Error(result.message || "Failed to submit offer.");
       }
 
-      toast.success("Offer submitted successfully!");
+      toast.success(t.offerSubmitted);
       router.push("/admin/dashboard"); // Or redirect wherever appropriate
     } catch (error) {
       console.error(error);
@@ -119,8 +126,13 @@ export default function TenderDetails() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg p-6 md:p-10">
+    <div
+      className={`min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10 ${
+        isRTL ? "rtl" : ""
+      }`}
+      dir={isRTL ? "rtl" : "ltr"}
+    >
+      <div className="w-full max-w-4xl bg-lime-100 rounded-2xl shadow-lg p-6 md:p-10">
         <Loading isLoading={loading} />
         <Toaster position="top-center" reverseOrder={false} />
         {tender && (
@@ -132,26 +144,27 @@ export default function TenderDetails() {
               height={300}
               className="w-full h-64 object-cover rounded-xl mb-6"
             />
-            <h1 className="text-3xl md:text-4xl text-center font-bold text-amber-900 mb-2">
+            <h1 className="text-3xl md:text-4xl text-center font-bold text-fuchsia-700 mb-2">
               {tender.title}
             </h1>
             <div className="text-gray-600 space-y-1 mb-4">
               <p>
-                <strong>Company:</strong> {tender?.companyuser?.company_name}
+                <strong>{t.company}:</strong>{" "}
+                {tender?.companyuser?.company_name}
               </p>
               <p className="text-gray-700 whitespace-pre-line ">
-                <strong>Description:</strong> {tender.description}
+                <strong>{t.description}:</strong> {tender.description}
               </p>
               <p>
-                <strong>Budget:</strong> {tender.budget}
+                <strong>{t.budget}:</strong> {tender.budget} {t.currency}
               </p>
               <p className="text-red-600">
-                <strong className=" text-bold ">Deadline:</strong>{" "}
-                {formatDate(tender.bid_end_date)}
+                <strong className=" text-bold ">{t.deadline}:</strong>{" "}
+                {formatDateWithLan(tender.bid_end_date, language)}
               </p>
               <p>
-                <strong>Created and Last Updated Date:</strong>{" "}
-                {formatDate(tender.created_at)}
+                <strong>{t.createdUpdatedDate}:</strong>{" "}
+                {formatDateWithLan(tender.created_at, language)}
               </p>
             </div>
 
@@ -161,14 +174,14 @@ export default function TenderDetails() {
                 download
                 className="px-5 py-2 bg-blue-600 cursor-pointer text-white rounded hover:bg-blue-700 transition"
               >
-                Download BOQ
+                {t.downloadBoq}
               </a>
               <a
                 href={"https://mazadoman.com/backend/" + tender?.boq}
                 target="_blank"
                 className="px-5 py-2 border border-blue-600 text-blue-600 rounded hover:bg-blue-50 transition"
               >
-                View BOQ
+                {t.viewBoq}
               </a>
             </div>
             <div className="flex flex-wrap gap-4 mb-10">
@@ -177,14 +190,14 @@ export default function TenderDetails() {
                 download
                 className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
               >
-                Download Scope of Work
+                {t.downloadScope}
               </a>
               <a
                 href={"https://mazadoman.com/backend/" + tender?.scope}
                 target="_blank"
                 className="px-5 py-2 border border-blue-600 text-blue-600 rounded hover:bg-blue-50 transition"
               >
-                View Scope of Work
+                {t.viewScope}
               </a>
             </div>
             {tender?.additional_files?.length > 0 && (
@@ -195,7 +208,7 @@ export default function TenderDetails() {
                     className="flex flex-col sm:flex-row sm:items-center sm:gap-4 border rounded p-4 shadow-sm"
                   >
                     <p className="flex-1 font-medium text-gray-700">
-                      Additional Document {index + 1}
+                      {t.additionalDoc} {index + 1}
                     </p>
                     <div className="flex gap-3 mt-2 sm:mt-0">
                       <a
@@ -203,7 +216,7 @@ export default function TenderDetails() {
                         download
                         className="px-5 py-2 bg-blue-600 cursor-pointer text-white rounded hover:bg-blue-700 transition text-sm text-center"
                       >
-                        Download
+                        {t.download}
                       </a>
                       <a
                         href={`https://mazadoman.com/backend/${file.file_path}`}
@@ -211,7 +224,7 @@ export default function TenderDetails() {
                         rel="noopener noreferrer"
                         className="px-5 py-2 border border-blue-600 text-blue-600 rounded hover:bg-blue-50 transition text-sm text-center"
                       >
-                        View
+                        {t.view}
                       </a>
                     </div>
                   </div>
@@ -224,20 +237,18 @@ export default function TenderDetails() {
         <div className="border-t pt-6">
           {!isLoggedIn ? (
             <div className="text-center">
-              <p className="text-gray-600 mb-4">
-                You need to be logged in to submit your offer.
-              </p>
+              <p className="text-gray-600 mb-4">{t.loginToSubmit}</p>
               <Link
                 href="/login"
                 className="inline-block px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition"
               >
-                Login to Submit
+                {t.loginCheck}
               </Link>
             </div>
           ) : (
             <div>
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Submit Your Offer
+                {t.submitOffer}
               </h2>
               <form onSubmit={handleSubmit} className="space-y-6">
                 {error && <p className="text-red-600">{error}</p>}
@@ -246,7 +257,7 @@ export default function TenderDetails() {
                     htmlFor="totalOffer"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Total Offer (OMR):
+                    {t.totalOffer} ({t.currency}):
                   </label>
                   <input
                     type="text"
@@ -257,52 +268,100 @@ export default function TenderDetails() {
                     required
                   />
                 </div>
-                <div>
-                  <label
-                    htmlFor="technicalOffer"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Upload Technical Offer (PDF)
+                <div className={`${isRTL ? "rtl" : ""}`}>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">
+                    {t.uploadTechOffer || "Upload Technical Offer (PDF)"}
                   </label>
-                  <input
-                    type="file"
-                    id="technicalOffer"
-                    accept="application/pdf"
-                    onChange={(e) => setTechnicalOffer(e.target.files[0])}
-                    className="block w-full border border-gray-300 rounded p-2 text-sm"
-                  />
+                  <div
+                    className={`relative w-full mt-1 border border-gray-300 rounded-lg ${
+                      isRTL ? "text-right" : "text-left"
+                    }`}
+                    style={{ height: "3rem" }}
+                  >
+                    <span
+                      className={`absolute top-1/2 ${
+                        isRTL ? "right-3" : "left-3"
+                      } transform -translate-y-1/2 text-gray-500 text-sm`}
+                      style={{ pointerEvents: "none" }}
+                    >
+                      {technicalOffer
+                        ? technicalOffer.name
+                        : t.noFileChosen || "No file chosen"}
+                    </span>
+                    <input
+                      type="file"
+                      id="technicalOffer"
+                      accept="application/pdf"
+                      onChange={(e) => setTechnicalOffer(e.target.files[0])}
+                      className="absolute top-0 left-0 opacity-0 w-full h-full cursor-pointer"
+                      style={{ direction: isRTL ? "rtl" : "ltr" }}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label
-                    htmlFor="commercialOffer"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Upload Commercial Offer (PDF)
-                  </label>
-                  <input
-                    type="file"
-                    id="commercialOffer"
-                    accept="application/pdf"
-                    onChange={(e) => setCommercialOffer(e.target.files[0])}
-                    className="block w-full border border-gray-300 rounded p-2 text-sm"
-                  />
-                </div>
-                {/*  additional */}
-                <div>
-                  <label
-                    htmlFor="additional_documents"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Upload additional documents:
-                  </label>
 
-                  <input
-                    type="file"
-                    id="additional_documents"
-                    multiple
-                    onChange={handleFileChange}
-                    className="block w-full border border-gray-300 rounded p-2 text-sm"
-                  />
+                <div className={`${isRTL ? "rtl" : ""}`}>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">
+                    {t.uploadCommOffer || "Upload Commercial Offer (PDF)"}
+                  </label>
+                  <div
+                    className={`relative w-full mt-1 border border-gray-300 rounded-lg ${
+                      isRTL ? "text-right" : "text-left"
+                    }`}
+                    style={{ height: "3rem" }}
+                  >
+                    <span
+                      className={`absolute top-1/2 ${
+                        isRTL ? "right-3" : "left-3"
+                      } transform -translate-y-1/2 text-gray-500 text-sm`}
+                      style={{ pointerEvents: "none" }}
+                    >
+                      {commercialOffer
+                        ? commercialOffer.name
+                        : t.noFileChosen || "No file chosen"}
+                    </span>
+                    <input
+                      type="file"
+                      id="commercialOffer"
+                      accept="application/pdf"
+                      onChange={(e) => setCommercialOffer(e.target.files[0])}
+                      className="absolute top-0 left-0 opacity-0 w-full h-full cursor-pointer"
+                      style={{ direction: isRTL ? "rtl" : "ltr" }}
+                    />
+                  </div>
+                </div>
+
+                {/*  additional */}
+                <div className={`${isRTL ? "rtl" : ""}`}>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">
+                    {t.uploadAdditional || "Upload Additional Documents"}
+                  </label>
+                  <div
+                    className={`relative w-full mt-1 border border-gray-300 rounded-lg ${
+                      isRTL ? "text-right" : "text-left"
+                    }`}
+                    style={{ height: "3rem" }}
+                  >
+                    <span
+                      className={`absolute top-1/2 ${
+                        isRTL ? "right-3" : "left-3"
+                      } transform -translate-y-1/2 text-gray-500 text-sm truncate max-w-[85%]`}
+                      style={{ pointerEvents: "none" }}
+                    >
+                      {additionalFiles.length > 0
+                        ? `${additionalFiles.length} ${
+                            t.filesSelected || "files selected"
+                          }`
+                        : t.noFileChosen || "No file chosen"}
+                    </span>
+                    <input
+                      type="file"
+                      id="additional_documents"
+                      multiple
+                      onChange={handleFileChange}
+                      className="absolute top-0 left-0 opacity-0 w-full h-full cursor-pointer"
+                      style={{ direction: isRTL ? "rtl" : "ltr" }}
+                    />
+                  </div>
 
                   {additionalFiles.length > 0 && (
                     <ul className="mt-4 space-y-1 text-sm text-gray-700">
@@ -317,7 +376,7 @@ export default function TenderDetails() {
                   type="submit"
                   className="w-full py-2 cursor-pointer bg-orange-600 text-white font-semibold rounded-md hover:bg-orange-700 transition"
                 >
-                  Submit Offer
+                  {t.submit}
                 </button>
               </form>
             </div>

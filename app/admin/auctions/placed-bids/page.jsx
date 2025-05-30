@@ -3,8 +3,14 @@ import Loading from "@/app/components/LoadingSpinner";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
+import { useLanguage } from "../../../components/LanguageContext";
+import { translations } from "../../../translations/translation";
 
 export default function PostedAuctionsPage() {
+  const { language } = useLanguage();
+  const t = translations[language];
+  const isRTL = language === "ar";
+
   const [filter, setFilter] = useState("all");
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -12,25 +18,22 @@ export default function PostedAuctionsPage() {
   const [error, setError] = useState(null);
   const user = useSelector((state) => state.session.user);
 
-  const userId = user?.id; // Example user ID
+  const userId = user?.id;
 
   useEffect(() => {
     if (!userId) {
-      setError("User ID is required");
+      setError(t.errorUserIdRequired);
       setLoading(false);
       return;
     }
 
-    // Fetch tenders by user ID
     fetch(`https://mazadoman.com/backend/api/user/bids/details/${userId}`)
       .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch tenders.");
-        }
+        if (!response.ok) throw new Error(t.errorFetchBids);
         return response.json();
       })
       .then((data) => {
-        setAuctions(data.bids); // Assuming the response has a 'tenders' array
+        setAuctions(data.bids);
         setLoading(false);
       })
       .catch((err) => {
@@ -45,14 +48,17 @@ export default function PostedAuctionsPage() {
   );
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div
+      className={`p-6 max-w-6xl mx-auto ${isRTL ? "text-right" : "text-left"}`}
+    >
       <Loading isLoading={loading} />
+
       <h1 className="text-2xl text-center text-orange-400 font-bold mb-4">
-        List of Placed Bids
+        {t.pageTitleBids}
       </h1>
 
       {/* Filter Buttons */}
-      <div className="mb-6 flex gap-4">
+      <div className={`mb-6 flex gap-4 `}>
         {["all", "Forward", "Reverse"].map((type) => (
           <button
             key={type}
@@ -63,7 +69,7 @@ export default function PostedAuctionsPage() {
                 : "bg-white text-gray-700 border-gray-300"
             } hover:bg-purple-500 hover:text-white transition`}
           >
-            {type.charAt(0).toUpperCase() + type.slice(1)} Auctions
+            {t.filters[type]} {t.auctionsLabel}
           </button>
         ))}
       </div>
@@ -73,26 +79,27 @@ export default function PostedAuctionsPage() {
         {filteredAuctions.map((auction) => (
           <div
             key={auction.id}
-            onClick={() => {
+            onClick={() =>
               router.push(
                 `/admin/auctions/placed-bids/view_auction?id=${encodeURIComponent(
                   auction?.auction_id
                 )}`
-              );
-            }}
+              )
+            }
             className="border rounded-lg p-4 cursor-pointer bg-orange-400 shadow-sm hover:shadow-md transition"
           >
-            <div className="text-sm text-white">ID: {auction.auction_id}</div>
+            <div className="text-sm text-white">
+              {t.idLabel}: {auction.auction_id}
+            </div>
             <h2 className="text-lg font-semibold mt-2">{auction.title}</h2>
             <div
               className={`mt-2 inline-block px-3 py-1 text-sm rounded-md ${
-                auction.type === "forward"
+                auction.auction_type === "Forward"
                   ? "bg-green-100 text-green-800"
                   : "bg-red-100 text-red-800"
               }`}
             >
-              {auction.auction_type.charAt(0).toUpperCase() +
-                auction.auction_type.slice(1)}
+              {t.filters[auction.auction_type]}
             </div>
           </div>
         ))}

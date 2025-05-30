@@ -5,32 +5,37 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 
+import { useLanguage } from "../../components/LanguageContext";
+import { translations } from "../../translations/translation";
+
 export default function TenderPosted() {
+  const { language } = useLanguage();
+  const t = translations[language];
+
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [tenders, setTenders] = useState([]);
   const [error, setError] = useState(null);
   const user = useSelector((state) => state.session.user);
 
-  const userId = user?.id; // Example user ID
+  const userId = user?.id;
 
   useEffect(() => {
     if (!userId) {
-      setError("User ID is required");
+      setError(t.errorUserIdRequired);
       setLoading(false);
       return;
     }
 
-    // Fetch tenders by user ID
     fetch(`https://mazadoman.com/backend/api/user-tenders/${userId}`)
       .then((response) => {
         if (!response.ok) {
-          throw new Error("Failed to fetch tenders.");
+          throw new Error(t.errorFetchingTenders);
         }
         return response.json();
       })
       .then((data) => {
-        setTenders(data.tenders); // Assuming the response has a 'tenders' array
+        setTenders(data.tenders);
         setLoading(false);
       })
       .catch((err) => {
@@ -38,16 +43,20 @@ export default function TenderPosted() {
         setError(err.message);
         setLoading(false);
       });
-  }, [userId]);
+  }, [userId, t.errorFetchingTenders, t.errorUserIdRequired]);
+
+  const alignment = language === "ar" ? "text-right" : "text-left";
+  const direction = language === "ar" ? "rtl" : "ltr";
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Tenders You Have Posted</h1>
+    <div className={`p-4 ${alignment}`} dir={direction}>
+      <h1 className="text-2xl font-bold mb-4">{t.tendersPostedTitle}</h1>
       <Loading isLoading={loading} />
-      {/* Sample table */}
-      {/* Tenders Posted */}
-      <div className="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 space-y-4">
-        <ul className="space-y-3">
+
+      {error && <div className="text-red-500 mb-4">{error}</div>}
+
+      <div className="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300">
+        <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
           {tenders.map((tender) => (
             <li
               key={tender.tender_id}
@@ -58,12 +67,18 @@ export default function TenderPosted() {
                   )}`
                 );
               }}
-              className="p-4 bg-amber-200 rounded-xl hover:bg-amber-400 cursor-pointer flex gap-1 items-center transition-colors duration-200"
+              className="p-4 bg-lime-200 rounded-xl hover:bg-lime-400 cursor-pointer flex flex-col justify-center items-start min-h-[120px] transition-colors duration-200"
             >
-              <span className="text-sm mr-2 text-gray-500">
-                {tender.tender_id}
+              <span
+                className={`text-sm text-gray-500 ${
+                  language === "ar" ? "ml-2" : "mr-2"
+                }`}
+              >
+                {t.tender_id} : {tender.tender_id}
               </span>
-              <span className="font-medium text-gray-700">{tender.title}</span>
+              <span className="font-medium text-gray-700">
+                {t.tender_title}:{tender.title}
+              </span>
             </li>
           ))}
         </ul>

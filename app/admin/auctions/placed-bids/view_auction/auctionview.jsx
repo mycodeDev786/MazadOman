@@ -5,6 +5,8 @@ import Link from "next/link";
 import Loading from "@/app/components/LoadingSpinner";
 import { useSelector } from "react-redux";
 import toast, { Toaster } from "react-hot-toast";
+import { useLanguage } from "../../../../components/LanguageContext";
+import { translations } from "../../../../translations/placed_bid_translation";
 
 export default function TenderPage() {
   const searchParams = useSearchParams();
@@ -20,6 +22,9 @@ export default function TenderPage() {
   const [technicalOffer, setTechnicalOffer] = useState(null);
   const [commercialOffer, setCommercialOffer] = useState(null);
   const [totalOffer, setTotalOffer] = useState(null);
+  const { language } = useLanguage();
+  const t = translations[language];
+  const isRTL = language === "ar";
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files); // convert FileList to array
@@ -97,7 +102,7 @@ export default function TenderPage() {
       if (!response.ok) {
         console.error("Server Error:", result);
       } else {
-        toast.success("Bid updated successfully:", result);
+        toast.success(t.updateSuccess);
         window.location.reload();
       }
     } catch (error) {
@@ -110,30 +115,34 @@ export default function TenderPage() {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div
+      className={`p-6 max-w-6xl mx-auto ${isRTL ? "text-right" : "text-left"}`}
+    >
       <Toaster position="top-center" reverseOrder={false} />
       <Loading isLoading={loading} />
-      <h1 className="text-2xl font-bold text-center mb-4">
-        Placed Bid Information
+      <h1 className="text-2xl text-orange-400 font-bold text-center mb-4">
+        {t.pageTitle}
       </h1>
       <div className="flex justify-between">
         {/* Tender Info */}
         <div className="space-y-4 flex-1 pl-6">
           <div className="flex items-center space-x-2">
-            <span className="text-gray-500">Auction Id:</span>
+            <span className="text-gray-500">{t.auctionId}</span>
             <p className="text-amber-700 m-0">{tender?.auction_id}</p>
           </div>
           <div className="flex items-center space-x-2">
-            <span className="text-gray-500">Auction title:</span>
+            <span className="text-gray-500">{t.auctionTitle}</span>
             <p className="text-amber-700 m-0">{tender?.title}</p>
           </div>
           <div className="flex items-center space-x-2">
-            <span className="text-gray-500">Placed Bid:</span>
-            <p className="text-amber-700 m-0">{tender?.bid_amount} OMR</p>
+            <span className="text-gray-500">{t.placedBid}</span>
+            <p className="text-amber-700 m-0">
+              {tender?.bid_amount} {t.currency}
+            </p>
           </div>
 
           <div>
-            <span className="text-gray-500">Status:</span>{" "}
+            <span className="text-gray-500">{t.status}</span>{" "}
             <span
               className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-semibold rounded-full ${(() => {
                 const status = tender?.status?.toLowerCase();
@@ -164,13 +173,13 @@ export default function TenderPage() {
           </div>
 
           <div>
-            <span className="text-gray-500">Offer File:</span>{" "}
+            <span className="text-gray-500">{t.offerFile}</span>{" "}
             <a
               href={`https://mazadoman.com/backend/${tender?.offer_file}`}
               className="text-blue-600 hover:underline"
               download
             >
-              Download
+              {t.download}
             </a>
           </div>
 
@@ -179,7 +188,7 @@ export default function TenderPage() {
               href="#"
               className="inline-block mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
             >
-              Enter to Online Bidding
+              {t.enterOnlineBidding}
             </Link>
           )}
         </div>
@@ -189,13 +198,13 @@ export default function TenderPage() {
             className="bg-yellow-500 text-white px-4 py-2 rounded"
             onClick={() => setShowEditModal(true)}
           >
-            ✏️ Edit
+            ✏️ {t.edit}
           </button>
           <button
             className="bg-green-600 text-white px-4 py-2 rounded"
             onClick={() => setShowResubmitModal(true)}
           >
-            📤 Resubmit the Quotation
+            📤 {t.resubmit}
           </button>
         </div>
       </div>
@@ -205,7 +214,7 @@ export default function TenderPage() {
           <div className="bg-white rounded-lg shadow-md p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <Loading isLoading={loading} />
             <h2 className="text-xl font-semibold mb-4">
-              {showEditModal ? "Edit Bid Quotation" : "Resubmit Bid Quotation"}
+              {showEditModal ? t.editTitle : t.resubmitTitle}
             </h2>
 
             <form
@@ -215,7 +224,9 @@ export default function TenderPage() {
               }}
             >
               <div className="mb-4">
-                <label className="block text-gray-700">Bid Amount (OMR):</label>
+                <label className="block text-gray-700">
+                  {t.bidAmount} ({t.currency}):
+                </label>
                 <input
                   type="number"
                   name="quote_amount"
@@ -227,7 +238,9 @@ export default function TenderPage() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-gray-700">Offer File (PDF):</label>
+                <label className="block text-gray-700">
+                  {t.offerFileLabel}
+                </label>
                 <input
                   type="file"
                   name="technical_offer"
@@ -246,13 +259,13 @@ export default function TenderPage() {
                     setShowResubmitModal(false);
                   }}
                 >
-                  Cancel
+                  {t.cancel}
                 </button>
                 <button
                   type="submit"
                   className="bg-blue-600 text-white px-4 py-2 rounded"
                 >
-                  Submit
+                  {t.submit}
                 </button>
               </div>
             </form>

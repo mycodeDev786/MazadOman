@@ -2,9 +2,11 @@
 import { assets } from "@/assets/assets";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { formatDate } from "../utils/formatDate";
+import { formatDate, formatDateWithLan } from "../utils/formatDate";
 import { useRouter } from "next/navigation";
 import Loading from "../components/LoadingSpinner";
+import { useLanguage } from "../components/LanguageContext";
+import { translations } from "../translations/translation";
 
 export default function TenderPage() {
   const [query, setQuery] = useState("");
@@ -12,6 +14,10 @@ export default function TenderPage() {
   const [reverseAuctions, setReverseAuctions] = useState([]);
   const [error, setError] = useState(null);
   const router = useRouter();
+
+  const { language } = useLanguage();
+  const t = translations[language];
+  const isArabic = language === "ar";
 
   useEffect(() => {
     // Replace with your real API URL
@@ -40,7 +46,10 @@ export default function TenderPage() {
   );
 
   return (
-    <main>
+    <main
+      dir={isArabic ? "rtl" : "ltr"}
+      className={isArabic ? "text-right" : "text-left"}
+    >
       {/* Hero Section */}
       <Loading isLoading={loading} />
       <section className="relative w-full h-[400px]">
@@ -52,18 +61,13 @@ export default function TenderPage() {
           priority
         />
         <div className="absolute inset-0 bg-black/50 flex flex-col justify-center items-center text-center text-white px-4">
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-            Welcome to E-Auction Portal
-          </h1>
-          <p className="max-w-2xl mb-6 text-lg">
-            Explore and submit offers for the latest government and private
-            auctions across Oman.
-          </p>
+          <h1 className="text-4xl sm:text-5xl font-bold mb-4">{t.heroTitle}</h1>
+          <p className="max-w-2xl mb-6 text-lg">{t.heroDescription}</p>
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search auction by name or id..."
+            placeholder={t.searchPlaceholder}
             className="w-full max-w-xl px-4 py-2 rounded-md text-white placeholder-slate-500"
           />
         </div>
@@ -72,7 +76,7 @@ export default function TenderPage() {
       {/* Latest Tenders */}
       <section className="max-w-7xl mx-auto px-4 py-12">
         <h2 className="text-3xl text-center font-bold text-orange-800 mb-6">
-          All Reverse Auctions
+          {t.allReverseAuctions}
         </h2>
 
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
@@ -92,23 +96,34 @@ export default function TenderPage() {
                     sizes="(max-width:1024px) 100vw, 25vw"
                     priority
                   />
-                  <div className="absolute top-3 left-3 bg-fuchsia-500 text-white text-xs font-semibold py-1 px-2 rounded-md shadow">
-                    Launched on {formatDate(tender?.created_at)}
+                  <div
+                    className={`absolute top-3 ${
+                      language === "ar" ? "right-3" : "left-3"
+                    } bg-fuchsia-500 text-white text-xs font-semibold py-1 px-2 rounded-md shadow`}
+                  >
+                    {t.launchedOn}{" "}
+                    {formatDateWithLan(tender?.created_at, language)}
                   </div>
                 </div>
 
                 {/* body */}
                 <div className="flex flex-col flex-1 p-5">
                   <div className="space-y-1.5">
-                    <h3 className="font-extrabold text-orange-600 leading-tight text-lg sm:text-xl">
-                      {tender.auction_id}: {tender.title}
+                    <h3
+                      className={`${
+                        isArabic ? "text-right" : "text-left"
+                      } font-extrabold text-orange-600 leading-tight text-lg sm:text-xl`}
+                    >
+                      {isArabic
+                        ? tender.title + ":" + tender.auction_id
+                        : tender.auction_id + ":" + tender.title}
                     </h3>
                     <p className="text-sm text-slate-600">
-                      <span className="text-orange-600">Bid Price: </span>
-                      {tender.budget} OMR
+                      <span className="text-orange-600">{t.bidPrice}: </span>
+                      {tender.budget} {t.currency}
                     </p>
                     <p className="text-sm font-semibold text-red-600">
-                      <span className="text-orange-600">Deadline: </span>
+                      <span className="text-orange-600">{t.deadline}: </span>
                       {tender.bid_end_date}
                     </p>
                   </div>
@@ -125,7 +140,7 @@ export default function TenderPage() {
                     }}
                   >
                     <p className="w-full text-center  bg-fuchsia-500 cursor-pointer text-white font-semibold py-2 rounded-md hover:bg-fuchsia-600 transition">
-                      View Details
+                      {t.viewDetails}
                     </p>
                   </div>
                 </div>
@@ -133,7 +148,7 @@ export default function TenderPage() {
             ))
           ) : (
             <p className="text-orange-600 col-span-full text-center">
-              No auctions found.
+              {t.noAuctionsFound}
             </p>
           )}
         </div>

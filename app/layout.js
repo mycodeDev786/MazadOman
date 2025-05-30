@@ -6,6 +6,8 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import { Provider } from "react-redux";
 import store from "./store/store"; // Import your Redux store
 import Footer from "./components/Footer";
+import { LanguageProvider } from "./components/LanguageContext";
+import { useState, useEffect } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,12 +25,14 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Provider store={store}>
-          {/* Wrap with Redux Provider */}
-          <Header />
-          {children}
-          <Footer />
-        </Provider>
+        <LanguageProvider>
+          <Provider store={store}>
+            {/* Wrap with Redux Provider */}
+            <Header />
+            {children}
+            <Footer />
+          </Provider>
+        </LanguageProvider>
       </body>
     </html>
   );

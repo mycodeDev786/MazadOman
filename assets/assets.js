@@ -12,10 +12,12 @@ import beauty from "../assets/beauty.png";
 import skin from "../assets/skin.png";
 import facility from "../assets/facility.png";
 import profile from "../assets/profile.png";
+import promotionIcon from "../assets/promotion.png";
 export const assets = {
   logo,
   footerBg: "/images/footer.png",
   hero: "/images/hero.png",
+  promotionIcon,
   t1,
   t2,
   c1,

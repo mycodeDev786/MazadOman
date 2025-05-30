@@ -5,6 +5,12 @@ import { Pencil, X } from "lucide-react";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
 import Loading from "@/app/components/LoadingSpinner";
+import { useLanguage } from "../../components/LanguageContext";
+import { translations } from "../../translations/translation";
+import {
+  formatDateWithLan,
+  formatPhoneNumberByLanguage,
+} from "@/app/utils/formatDate";
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
@@ -15,13 +21,11 @@ export default function ProfilePage() {
   const [logo, setLogo] = useState(null);
   const [cr, setCr] = useState(null);
 
+  const { language } = useLanguage();
+  const t = translations[language];
+  const isRTL = language === "ar";
+
   // format date
-  const formattedDate = new Date(user?.created_at).toLocaleDateString("en-US", {
-    weekday: "long", // e.g., 'Monday'
-    year: "numeric",
-    month: "long", // e.g., 'April'
-    day: "numeric", // e.g., '28'
-  });
 
   useEffect(() => {
     // Retrieve the token from localStorage
@@ -106,9 +110,9 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="p-6">
+    <div className={`p-6 ${isRTL ? "text-right" : "text-left"}`}>
       <Loading isLoading={loading} />
-      <h1 className="text-3xl font-bold mb-6">My Profile</h1>
+      <h1 className="text-3xl font-bold mb-6">{t.myProfile}</h1>
 
       <div className="bg-white p-6 rounded-lg shadow-md flex flex-col md:flex-row gap-8">
         {/* Profile Picture (dummy) */}
@@ -129,24 +133,29 @@ export default function ProfilePage() {
         {/* Profile Info */}
         <div className="flex-1">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <ProfileField label="Name" value={user?.company_name} />
-            <ProfileField label="Email" value={user?.email} />
-            <ProfileField label="Phone" value={user?.phone_number} />
-
-            <ProfileField label="Joined On" value={formattedDate} />
+            <ProfileField label={t.name} value={user?.company_name} />
+            <ProfileField label={t.email} value={user?.email} />
+            <ProfileField
+              label={t.phone}
+              value={formatPhoneNumberByLanguage(user?.phone_number, language)}
+            />
+            <ProfileField
+              label={t.joinedOn}
+              value={formatDateWithLan(user?.created_at, language)}
+            />
           </div>
           <button
             onClick={handleCrClick}
             className="mt-6 bg-purple-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-600 transition"
           >
-            View CR
+            {t.viewCR}
           </button>
           <button
             onClick={handleEditClick}
             className="mt-6 bg-amber-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-600 transition"
           >
             <Pencil size={18} />
-            Edit Profile
+            {t.editProfile}
           </button>
         </div>
       </div>
@@ -154,20 +163,26 @@ export default function ProfilePage() {
       {/* Edit Modal */}
       {isEditing && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md relative max-h-[90vh] overflow-y-auto">
+          <div
+            className={`bg-white p-8 rounded-lg shadow-lg w-full max-w-md relative max-h-[90vh] overflow-y-auto ${
+              isRTL ? "text-right" : "text-left"
+            }`}
+          >
             <button
               onClick={() => setIsEditing(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+              className={`absolute top-4 ${
+                language === "ar" ? "left-4" : "right-4"
+              } text-gray-500 hover:text-gray-700`}
             >
               <X size={24} />
             </button>
 
-            <h2 className="text-2xl font-bold mb-6">Edit Profile</h2>
+            <h2 className="text-2xl font-bold mb-6">{t.editProfileHeader}</h2>
 
             <div className="flex flex-col space-y-4">
               {/* Company Name */}
               <InputField
-                label="Company Name"
+                label={t.companyName}
                 value={formData.company_name}
                 onChange={(e) =>
                   setFormData({ ...formData, company_name: e.target.value })
@@ -176,7 +191,7 @@ export default function ProfilePage() {
 
               {/* Person Name */}
               <InputField
-                label="Person Name"
+                label={t.personName}
                 value={formData.person_name}
                 onChange={(e) =>
                   setFormData({ ...formData, person_name: e.target.value })
@@ -185,8 +200,11 @@ export default function ProfilePage() {
 
               {/* Phone Number */}
               <InputField
-                label="Phone Number"
-                value={formData.phone_number}
+                label={t.phoneNumber}
+                value={formatPhoneNumberByLanguage(
+                  formData.phone_number,
+                  language
+                )}
                 onChange={(e) =>
                   setFormData({ ...formData, phone_number: e.target.value })
                 }
@@ -194,7 +212,7 @@ export default function ProfilePage() {
 
               {/* Email */}
               <InputField
-                label="Email"
+                label={t.email}
                 value={formData.email}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
@@ -202,25 +220,61 @@ export default function ProfilePage() {
               />
 
               {/* Logo Upload */}
-              <div className="flex flex-col">
-                <label className="mb-1 font-medium">Logo</label>
-                <input
-                  type="file"
-                  className="border p-1.5"
-                  accept="image/*"
-                  onChange={(e) => setLogo(e.target.files[0])}
-                />
+              <div className={`${isRTL ? "rtl" : ""}`}>
+                <label className="text-sm font-medium text-gray-700 block mb-1">
+                  {t.logo || "Logo"}
+                </label>
+                <div
+                  className={`relative w-full mt-1 border border-gray-300 rounded-lg ${
+                    isRTL ? "text-right" : "text-left"
+                  }`}
+                  style={{ height: "3rem" }}
+                >
+                  <span
+                    className={`absolute top-1/2 ${
+                      isRTL ? "right-3" : "left-3"
+                    } transform -translate-y-1/2 text-gray-500 text-sm`}
+                    style={{ pointerEvents: "none" }}
+                  >
+                    {logo ? logo.name : t.noFileChosen || "No file chosen"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setLogo(e.target.files[0])}
+                    className="absolute top-0 left-0 opacity-0 w-full h-full cursor-pointer"
+                    style={{ direction: isRTL ? "rtl" : "ltr" }}
+                  />
+                </div>
               </div>
 
               {/* CR File Upload */}
-              <div className="flex flex-col">
-                <label className="mb-1 font-medium">CR File (PDF)</label>
-                <input
-                  type="file"
-                  className="border p-1.5"
-                  accept="application/pdf"
-                  onChange={(e) => setCr(e.target.files[0])}
-                />
+              <div className={`${isRTL ? "rtl" : ""}`}>
+                <label className="text-sm font-medium text-gray-700 block mb-1">
+                  {t.crFile || "CR File (PDF)"}
+                </label>
+                <div
+                  className={`relative w-full mt-1 border border-gray-300 rounded-lg ${
+                    isRTL ? "text-right" : "text-left"
+                  }`}
+                  style={{ height: "3rem" }}
+                >
+                  <span
+                    className={`absolute top-1/2 ${
+                      isRTL ? "right-3" : "left-3"
+                    } transform -translate-y-1/2 text-gray-500 text-sm`}
+                    style={{ pointerEvents: "none" }}
+                  >
+                    {cr ? cr.name : t.noFileChosen || "No file chosen"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(e) => setCr(e.target.files[0])}
+                    className="absolute top-0 left-0 opacity-0 w-full h-full cursor-pointer"
+                    style={{ direction: isRTL ? "rtl" : "ltr" }}
+                  />
+                </div>
               </div>
 
               {/* Save Button */}
@@ -228,7 +282,7 @@ export default function ProfilePage() {
                 onClick={handleSave}
                 className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition"
               >
-                Save Changes
+                {t.saveChanges}
               </button>
             </div>
           </div>
@@ -246,7 +300,7 @@ export default function ProfilePage() {
               <X size={24} />
             </button>
 
-            <h2 className="text-2xl font-bold mb-6">CR</h2>
+            <h2 className="text-2xl font-bold mb-6">{t.crTitle}</h2>
 
             {/* Display image or PDF */}
             {user?.cr_file === "image" ? (
@@ -269,11 +323,19 @@ export default function ProfilePage() {
   );
 }
 
-function ProfileField({ label, value }) {
+function ProfileField({ label, value, isRTL }) {
   return (
     <div>
       <div className="text-sm text-gray-500">{label}</div>
-      <div className="text-lg font-semibold">{value}</div>
+      <div
+        className="text-lg font-semibold"
+        style={{
+          direction: isRTL ? "rtl" : "ltr",
+          unicodeBidi: "isolate",
+        }}
+      >
+        {value}
+      </div>
     </div>
   );
 }

@@ -2,11 +2,17 @@
 import { assets } from "@/assets/assets";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { formatDate } from "../utils/formatDate";
+import { formatDate, formatDateWithLan } from "../utils/formatDate";
 import { useRouter } from "next/navigation";
 import Loading from "../components/LoadingSpinner";
 
+import { useLanguage } from "../components/LanguageContext";
+import { translations } from "../translations/translation";
+
 export default function TenderPage() {
+  const { language } = useLanguage();
+  const t = translations[language];
+
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [tenders, setTenders] = useState([]);
@@ -14,16 +20,15 @@ export default function TenderPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Replace with your real API URL
     fetch("https://mazadoman.com/backend/api/tenders")
       .then((response) => {
         if (!response.ok) {
-          throw new Error("Failed to fetch tenders.");
+          throw new Error(t.errors.fetchFailed);
         }
         return response.json();
       })
       .then((data) => {
-        setTenders(data.tenders); // depends on your API response
+        setTenders(data.tenders);
         setLoading(false);
       })
       .catch((err) => {
@@ -45,25 +50,22 @@ export default function TenderPage() {
       <Loading isLoading={loading} />
       <section className="relative w-full h-[400px]">
         <Image
-          src={assets.hero} // Replace with your actual hero background path
-          alt="E-Tendering Hero"
+          src={assets.hero}
+          alt={t.hero.alt}
           fill
           className="object-cover"
           priority
         />
         <div className="absolute inset-0 bg-black/50 flex flex-col justify-center items-center text-center text-white px-4">
           <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-            Welcome to E-Tendering Portal
+            {t.hero.welcome}
           </h1>
-          <p className="max-w-2xl mb-6 text-lg">
-            Explore and submit offers for the latest government and private
-            tenders across Oman.
-          </p>
+          <p className="max-w-2xl mb-6 text-lg">{t.hero.description}</p>
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search tenders by name or location..."
+            placeholder={t.hero.searchPlaceholder}
             className="w-full max-w-xl px-4 py-2 rounded-md text-white placeholder-slate-500"
           />
         </div>
@@ -72,10 +74,15 @@ export default function TenderPage() {
       {/* Latest Tenders */}
       <section className="max-w-7xl mx-auto px-4 py-12">
         <h2 className="text-3xl text-center font-bold text-orange-800 mb-6">
-          All Tenders
+          {t.allTenders}
         </h2>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div
+          dir={language === "ar" ? "rtl" : "ltr"}
+          className={`grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${
+            language === "ar" ? "text-right" : "text-left"
+          }`}
+        >
           {filteredTenders.length > 0 ? (
             filteredTenders.map((tender) => (
               <article
@@ -92,24 +99,26 @@ export default function TenderPage() {
                     sizes="(max-width:1024px) 100vw, 25vw"
                     priority
                   />
-                  <div className="absolute top-3 left-3 bg-amber-500 text-white text-xs font-semibold py-1 px-2 rounded-md shadow">
-                    Launched on {formatDate(tender?.created_at)}
+                  <div
+                    className={`absolute top-3 ${
+                      language === "ar" ? "right-3" : "left-3"
+                    } bg-amber-500 text-white text-xs font-semibold py-1 px-2 rounded-md shadow`}
+                  >
+                    {t.launchedOn} {formatDateWithLan(tender?.created_at)}
                   </div>
                 </div>
 
                 {/* body */}
-                {/* Make card body flex‑column & grow so buttons align */}
                 <div className="flex flex-col flex-1 p-5">
                   <div className="space-y-1.5">
                     <h3 className="font-extrabold text-purple-800 leading-tight text-lg sm:text-xl">
                       {tender.tender_id}: {tender.title}
                     </h3>
                     <p className="text-sm text-slate-600">
-                      {tender.budget} OMR
+                      {tender.budget} {t.currency}
                     </p>
                   </div>
 
-                  {/* spacer pushes button to bottom */}
                   <div className="flex-1" />
 
                   <div
@@ -122,7 +131,7 @@ export default function TenderPage() {
                     }}
                   >
                     <p className="w-full text-center bg-amber-500 cursor-pointer text-white font-semibold py-2 rounded-md hover:bg-amber-600 transition">
-                      Submit Offer
+                      {t.viewDetails}
                     </p>
                   </div>
                 </div>
@@ -130,7 +139,7 @@ export default function TenderPage() {
             ))
           ) : (
             <p className="text-slate-600 col-span-full text-center">
-              No tenders found.
+              {t.noTendersFound}
             </p>
           )}
         </div>

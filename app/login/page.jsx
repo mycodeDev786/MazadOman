@@ -8,8 +8,13 @@ import { assets } from "@/assets/assets";
 import Loading from "../components/LoadingSpinner";
 import { useDispatch } from "react-redux";
 import { login } from "../store/sessionSlice";
+import { useLanguage } from "../components/LanguageContext";
+import { translations } from "../translations/translation";
 
 export default function LoginPage() {
+  const { language } = useLanguage();
+  const t = translations[language];
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -17,10 +22,9 @@ export default function LoginPage() {
   const dispatch = useDispatch();
 
   const handleLogin = async (e) => {
-    e.preventDefault(); // Prevent form from refreshing the page
-    setIsLoading(true); // Show loading
+    e.preventDefault();
+    setIsLoading(true);
 
-    // Prepare the data for the request
     const data = { email, password };
 
     try {
@@ -35,32 +39,27 @@ export default function LoginPage() {
       const result = await response.json();
 
       if (response.ok) {
-        // Login successful, save the token in localStorage
-
-        toast.success(result.message);
+        toast.success(t.loginSuccessful);
         dispatch(login({ user: result.user, token: result.token }));
-
-        // Optionally, store the token in localStorage/sessionStorage for persistence
         localStorage.setItem("authToken", result.token);
-        // Redirect to dashboard or another protected page
-        window.location.href = "/admin/dashboard"; // Or use `router.push("/dashboard")` with Next.js routing
+        window.location.href = "/admin/dashboard";
       } else {
-        // Login failed, show error
         toast.error(result.message);
       }
     } catch (error) {
-      toast.error("Something went wrong. Please try again later.");
+      toast.error(t["error_generic"]);
       console.error(error);
     } finally {
-      setIsLoading(false); // Hide loading
+      setIsLoading(false);
     }
   };
 
   return (
     <div
+      dir={language === "ar" ? "rtl" : "ltr"}
       className="flex min-h-screen items-center justify-center bg-cover bg-center px-4"
       style={{
-        backgroundImage: `url(${assets.hero})`, // Adjust the image path
+        backgroundImage: `url(${assets.hero})`,
       }}
     >
       <Loading isLoading={isLoading} />
@@ -72,13 +71,13 @@ export default function LoginPage() {
         className="w-full max-w-md bg-white p-8 rounded-2xl shadow-2xl bg-opacity-90 backdrop-blur-md"
       >
         <h2 className="text-2xl font-extrabold text-purple-800 mb-8 text-center">
-          Login to your account
+          {t["login_title"]}
         </h2>
         <form onSubmit={handleLogin} className="space-y-6">
           {/* Email */}
           <div>
             <label className="text-sm font-medium text-gray-700">
-              Email Address
+              {t["email_label"]}
             </label>
             <input
               type="email"
@@ -86,14 +85,14 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              placeholder="you@example.com"
+              placeholder={t["email_placeholder"]}
             />
           </div>
 
           {/* Password */}
           <div>
             <label className="text-sm font-medium text-gray-700">
-              Password
+              {t["password_label"]}
             </label>
             <div className="relative">
               <input
@@ -102,14 +101,16 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                placeholder="••••••••"
+                placeholder={t["password_placeholder"]}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-3 flex items-center text-sm text-blue-600"
+                className={`absolute inset-y-0 ${
+                  language === "ar" ? "left-3" : "right-3"
+                } flex items-center text-sm text-blue-600`}
               >
-                {showPassword ? "Hide" : "Show"}
+                {showPassword ? t["password_hide"] : t["password_show"]}
               </button>
             </div>
           </div>
@@ -120,7 +121,7 @@ export default function LoginPage() {
               href="/forgot-password"
               className="text-blue-600 hover:underline"
             >
-              Forgot password?
+              {t["forgot_password"]}
             </Link>
           </div>
 
@@ -129,15 +130,15 @@ export default function LoginPage() {
             type="submit"
             className="w-full bg-gradient-to-r from-blue-500 to-blue-700 text-white py-3 rounded-lg hover:from-blue-600 hover:to-blue-800 transition-all duration-300"
           >
-            Login
+            {t["login_button"]}
           </button>
         </form>
 
         {/* Footer */}
         <p className="text-center text-sm text-gray-600 mt-6">
-          Don't have an account?{" "}
+          {t["no_account"]}{" "}
           <Link href="/register" className="text-blue-600 hover:underline">
-            Register
+            {t["register_link"]}
           </Link>
         </p>
       </motion.div>

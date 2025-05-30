@@ -9,11 +9,16 @@ import {
 } from "chart.js";
 import { useSelector } from "react-redux";
 import Loading from "@/app/components/LoadingSpinner";
+import { useLanguage } from "../../components/LanguageContext";
+import { translations } from "../../translations/translation";
 
 ChartJS.register(BarElement, CategoryScale, LinearScale);
 
 export default function AdminDashboard() {
   const user = useSelector((state) => state.session.user);
+  const { language } = useLanguage();
+  const t = translations[language];
+
   const [tenderPosted, setTenderPosted] = useState(0);
   const [tenderQuoted, setTenderQuoted] = useState(0);
   const [forwardAuctionPosted, setForwardAuctionPosted] = useState(0);
@@ -44,11 +49,12 @@ export default function AdminDashboard() {
         const reverseBidsResponse = await fetch(
           `https://mazadoman.com/backend/api/user/bids/reverse/${user?.id}`
         );
+
         if (
           !tenderResponse.ok ||
           !quoteResponse.ok ||
           !forwardAuctionResponse.ok ||
-          !forwardAuctionResponse.ok
+          !reverseAuctionResponse.ok
         ) {
           throw new Error("Failed to fetch data");
         }
@@ -66,7 +72,6 @@ export default function AdminDashboard() {
         setReverseAuctionPosted(reverseAuctionData.reverse_auction_count);
         setForwardAuctionPlacedBids(forwardBidsData.forward_bids_count);
         setReverseAuctionPlacedBids(reverseBidsData.reverse_bids_count);
-        // Add similar API calls to fetch forward/reverse auction data as needed
       } catch (err) {
         setError(err.message);
       } finally {
@@ -79,16 +84,16 @@ export default function AdminDashboard() {
 
   const data = {
     labels: [
-      "Tenders Posted",
-      "Tenders Quoted",
-      "Forward Auctions Posted",
-      "Bids Placed (Forward)",
-      "Reverse Auctions Posted",
-      "Bids Placed (Reverse)",
+      t.tendersPosted,
+      t.tendersQuoted,
+      t.forwardAuctionsPosted,
+      t.forwardBidsPlaced,
+      t.reverseAuctionsPosted,
+      t.reverseBidsPlaced,
     ],
     datasets: [
       {
-        label: "Overview",
+        label: t.overview,
         data: [
           tenderPosted,
           tenderQuoted,
@@ -117,59 +122,55 @@ export default function AdminDashboard() {
       },
     },
     scales: {
-      x: {
-        stacked: false,
-      },
-      y: {
-        stacked: false,
-      },
+      x: { stacked: false },
+      y: { stacked: false },
     },
   };
 
+  const rtlClass = language === "ar" ? "text-right" : "text-left";
+  const dir = language === "ar" ? "rtl" : "ltr";
+
   return (
-    <div>
+    <div dir={dir} className={`p-4 ${rtlClass}`}>
       <Loading isLoading={loading} />
       <h1 className="text-3xl font-bold mb-6">
-        Welcome, <span className="text-orange-500">{user?.company_name}</span>
+        {t.welcome},{" "}
+        <span className="text-orange-500">{user?.company_name}</span>
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-indigo-500 p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-2">Tenders Posted</h2>
+          <h2 className="text-xl font-semibold mb-2">{t.tendersPosted}</h2>
           <p className="text-3xl">{tenderPosted}</p>
         </div>
         <div className="bg-purple-400 p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-2">Tenders Quoted</h2>
+          <h2 className="text-xl font-semibold mb-2">{t.tendersQuoted}</h2>
           <p className="text-3xl">{tenderQuoted}</p>
         </div>
         <div className="bg-amber-700 p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold mb-2">
-            Forward Auctions Posted
+            {t.forwardAuctionsPosted}
           </h2>
           <p className="text-3xl">{forwardAuctionPosted}</p>
         </div>
         <div className="bg-orange-500 p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-2">
-            Placed Bids (Forward Auction)
-          </h2>
+          <h2 className="text-xl font-semibold mb-2">{t.forwardBidsPlaced}</h2>
           <p className="text-3xl">{forwardAuctionPlacedBids}</p>
         </div>
         <div className="bg-green-700 p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold mb-2">
-            Reverse Auctions Posted
+            {t.reverseAuctionsPosted}
           </h2>
           <p className="text-3xl">{reverseAuctionPosted}</p>
         </div>
         <div className="bg-red-400 p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-2">
-            Placed Bids (Reverse Auction)
-          </h2>
+          <h2 className="text-xl font-semibold mb-2">{t.reverseBidsPlaced}</h2>
           <p className="text-3xl">{reverseAuctionPlacedBids}</p>
         </div>
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">Analytics Overview</h2>
+        <h2 className="text-xl font-semibold mb-4">{t.analyticsOverview}</h2>
         <Bar data={data} options={options} />
       </div>
     </div>
