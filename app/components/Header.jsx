@@ -81,12 +81,12 @@ export default function Header() {
                 : "space-x-8"
             )}
           >
-            {/* <Link
+            <Link
               href="/tenders"
               className="hover:text-blue-600 hover:scale-105 transition"
             >
               {t.E_tenders}
-            </Link> */}
+            </Link>
             <Link
               href="/forward-auctions"
               className="hover:text-blue-600 hover:scale-105 transition"

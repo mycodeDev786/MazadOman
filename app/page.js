@@ -386,7 +386,7 @@ export default function Home() {
                       <div
                         onClick={() => {
                           router.push(
-                            `/tender_details?id=${encodeURIComponent(
+                            `/auction_details?id=${encodeURIComponent(
                               tender?.auction_id
                             )}`
                           );
@@ -479,7 +479,7 @@ export default function Home() {
                       <div
                         onClick={() => {
                           router.push(
-                            `/tender_details?id=${encodeURIComponent(
+                            `/auction_details?id=${encodeURIComponent(
                               tender?.auction_id
                             )}`
                           );

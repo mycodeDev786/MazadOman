@@ -239,7 +239,7 @@ const PromotionPage = () => {
   return (
     <>
       <Script
-        src="https://test.amwalpg.com:7443/js/SmartBox.js?v=1.1"
+        src="https://checkout.amwalpg.com/js/SmartBox.js?v=1.1"
         strategy="afterInteractive"
         onLoad={() => console.log("SmartBox.js loaded")}
       />

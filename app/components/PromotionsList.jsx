@@ -4,7 +4,6 @@ import Loading from "./LoadingSpinner";
 import { useLanguage } from "./LanguageContext";
 import { translations } from "../translations/promoted_products_translation";
 import { formatDateWithLan } from "../utils/formatDate";
-import { layouts } from "chart.js";
 
 export default function PromotionsList({ userId }) {
   const [promotions, setPromotions] = useState([]);

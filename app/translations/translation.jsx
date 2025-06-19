@@ -374,7 +374,7 @@ export const translations = {
   },
   ar: {
     promotedProduct: "المنتج المروج",
-    E_tenders: "المناقصات الإلكترونية",
+    E_tenders: "العطاءات",
     E_forward: "البيع بالمزاد",
     E_reverse: "الشراء بالمزاد",
     services: "خدماتنا",

@@ -4,7 +4,7 @@ import { createContext, useState, useEffect, useContext } from "react";
 const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
-  const [language, setLanguage] = useState("en");
+  const [language, setLanguage] = useState("ar");
 
   useEffect(() => {
     const savedLang = localStorage.getItem("lang");
@@ -18,7 +18,15 @@ export function LanguageProvider({ children }) {
 
   return (
     <LanguageContext.Provider value={{ language, changeLanguage }}>
-      {children}
+      <div
+        dir={language === "ar" ? "rtl" : "ltr"}
+        style={{
+          fontFamily:
+            language === "ar" ? "'Cairo', sans-serif" : "'Inter', sans-serif",
+        }}
+      >
+        {children}
+      </div>
     </LanguageContext.Provider>
   );
 }

@@ -285,109 +285,10 @@ export default function TenderPostPage() {
     }
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setIsLoading(true);
-
-  //   try {
-  //     // Step 1: Initiate Payment Session
-  //     const paymentResponse = await fetch(
-  //       "https://uatcheckout.thawani.om/api/v1/session",
-  //       {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           "thawani-api-key": process.env.THAWANI_PUBLIC_KEY, // Load public key from .env
-  //         },
-
-  //         body: JSON.stringify({
-  //           client_reference_id: user?.id,
-  //           products: [
-  //             {
-  //               name: "Auction Submission Fee",
-  //               quantity: 1,
-  //               unit_amount: 1000,
-  //             },
-  //           ],
-  //           success_url: "", // Leave blank to remain on the same page.
-  //           cancel_url: "", // Leave blank to remain on the same page.
-  //         }),
-  //       }
-  //     );
-
-  //     const paymentData = await paymentResponse.json();
-
-  //     if (!paymentResponse.ok) {
-  //       toast.error("Failed to initiate payment session.");
-  //       return;
-  //     }
-
-  //     // Step 2: Open Thawani Widget
-  //     const { data } = paymentData;
-  //     const paymentWidget = new window.ThawaniCheckout({
-  //       session_id: data.session_id,
-  //     });
-
-  //     paymentWidget.open();
-
-  //     // Step 3: Wait for Payment Completion (or User Closes Modal)
-  //     paymentWidget.on("payment-success", async () => {
-  //       // Validate Payment
-  //       try {
-  //         const validateResponse = await fetch(
-  //           "https://mazadoman.com/backend/api/validate-payment",
-  //           {
-  //             method: "POST",
-  //             headers: {
-  //               "Content-Type": "application/json",
-  //             },
-  //             body: JSON.stringify({
-  //               session_id: data.session_id,
-  //               user_id: user?.id,
-  //               // Include auction details here
-  //               title: tenderName,
-  //               category,
-  //               subcategory,
-  //               description,
-  //               budget,
-  //               bid_start_date: bidStartDate,
-  //               bid_end_date: bidEndDate,
-  //               auction_type: auctionType,
-  //             }),
-  //           }
-  //         );
-
-  //         const validationResult = await validateResponse.json();
-
-  //         if (validateResponse.ok) {
-  //           toast.success("Payment successful, auction saved!");
-  //           router.push("/admin/dashboard"); // Navigate to dashboard.
-  //         } else {
-  //           toast.error(
-  //             validationResult.message || "Payment validation failed."
-  //           );
-  //         }
-  //       } catch (error) {
-  //         console.error(error);
-  //         toast.error("Error validating payment.");
-  //       }
-  //     });
-
-  //     paymentWidget.on("payment-cancel", () => {
-  //       toast.error("Payment was canceled.");
-  //     });
-  //   } catch (error) {
-  //     console.error(error);
-  //     toast.error("Error initiating payment.");
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
   return (
     <>
       <Script
-        src="https://test.amwalpg.com:7443/js/SmartBox.js?v=1.1"
+        src="https://checkout.amwalpg.com/js/SmartBox.js?v=1.1"
         strategy="afterInteractive"
         onLoad={() => console.log("SmartBox.js loaded")}
       />
@@ -601,31 +502,6 @@ export default function TenderPostPage() {
               />
             </div>
           </div>
-
-          {/* Tender Scope */}
-          {/* <div>
-          <label htmlFor="image" className="block text-lg font-medium mb-2">
-            Upload Scope of Work:
-          </label>
-          <input
-            type="file"
-            id="scope"
-            onChange={(e) => setScope(e.target.files[0])}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-          />
-        </div> */}
-          {/* Tender BOQ */}
-          {/* <div>
-          <label htmlFor="image" className="block text-lg font-medium mb-2">
-            Upload the BOQ:
-          </label>
-          <input
-            type="file"
-            id="boq"
-            onChange={(e) => setBoq(e.target.files[0])}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-          />
-        </div> */}
 
           {/* Tender additional */}
           <div className={`${language === "ar" ? "rtl" : ""}`}>
